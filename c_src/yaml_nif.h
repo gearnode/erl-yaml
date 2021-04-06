@@ -15,6 +15,8 @@
 #ifndef YAML_NIF_H
 #define YAML_NIF_H
 
+#include <stdbool.h>
+
 #include <ei.h>
 #include <erl_nif.h>
 
@@ -25,5 +27,15 @@
 
 YAML_EXPORT(eyaml_get_version);
 YAML_EXPORT(eyaml_get_version_string);
+
+YAML_EXPORT(eyaml_parse);
+
+ERL_NIF_TERM eyaml_ok_tuple(ErlNifEnv *, ERL_NIF_TERM);
+ERL_NIF_TERM eyaml_error_tuple(ErlNifEnv *, ERL_NIF_TERM);
+ERL_NIF_TERM eyaml_binary_string(ErlNifEnv *, const char *);
+ERL_NIF_TERM eyaml_binary_ustring(ErlNifEnv *, const unsigned char *);
+ERL_NIF_TERM eyaml_boolean(ErlNifEnv *, bool);
+void eyaml_reverse_list(ErlNifEnv *, ERL_NIF_TERM *);
+void eyaml_map_put(ErlNifEnv *env, ERL_NIF_TERM, ERL_NIF_TERM, ERL_NIF_TERM *);
 
 #endif

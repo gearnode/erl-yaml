@@ -16,6 +16,12 @@
 
 -export([libyaml_version/0, libyaml_version_string/0]).
 
+-export_type([error_reason/0]).
+
+-type error_reason() ::
+        memory_error
+      | {parsing_error, binary(), yaml_events:mark()}.
+
 -spec libyaml_version() -> {integer(), integer(), integer()}.
 libyaml_version() ->
   yaml_nif:get_version().

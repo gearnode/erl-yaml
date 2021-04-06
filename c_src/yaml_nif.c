@@ -17,6 +17,8 @@
 static ErlNifFunc eyaml_nif_functions[] = {
         {"get_version", 0, eyaml_get_version, 0},
         {"get_version_string", 0, eyaml_get_version_string, 0},
+
+        {"parse", 1, eyaml_parse, 0},
 };
 
 ERL_NIF_INIT(yaml_nif, eyaml_nif_functions, NULL, NULL, NULL, NULL);

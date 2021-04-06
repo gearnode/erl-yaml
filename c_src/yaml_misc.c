@@ -30,16 +30,5 @@ eyaml_get_version(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
 
 ERL_NIF_TERM
 eyaml_get_version_string(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-        const char *version;
-        size_t len;
-        unsigned char *buf;
-        ERL_NIF_TERM term;
-
-        version = yaml_get_version_string();
-        len = strlen(version);
-
-        buf = enif_make_new_binary(env, len, &term);
-        strcpy((char *)buf, version);
-
-        return term;
+        return eyaml_binary_string(env, yaml_get_version_string());
 }

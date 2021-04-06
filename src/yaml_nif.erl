@@ -14,7 +14,7 @@
 
 -module(yaml_nif).
 
--export([get_version/0, get_version_string/0]).
+-export([get_version/0, get_version_string/0, parse/1]).
 
 -on_load(init/0).
 
@@ -29,4 +29,9 @@ get_version() ->
 
 -spec get_version_string() -> binary().
 get_version_string() ->
+  erlang:nif_error(nif_not_loaded).
+
+-spec parse(binary()) ->
+        {ok, [yaml_events:event()]} | {error, yaml:error_reason()}.
+parse(_Data) ->
   erlang:nif_error(nif_not_loaded).
