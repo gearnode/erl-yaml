@@ -15,8 +15,7 @@
 #include "yaml_nif.h"
 
 ERL_NIF_TERM
-erl_yaml_get_version(ErlNifEnv *env,
-                     int argc, const ERL_NIF_TERM argv[]) {
+eyaml_get_version(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
         int major, minor, patch;
         ERL_NIF_TERM major_term, minor_term, patch_term;
 
@@ -30,8 +29,7 @@ erl_yaml_get_version(ErlNifEnv *env,
 }
 
 ERL_NIF_TERM
-erl_yaml_get_version_string(ErlNifEnv *env,
-                            int argc, const ERL_NIF_TERM argv[]) {
+eyaml_get_version_string(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
         const char *version;
         size_t len;
         unsigned char *buf;

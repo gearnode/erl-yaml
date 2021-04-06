@@ -14,9 +14,9 @@
 
 #include "yaml_nif.h"
 
-static ErlNifFunc erl_yaml_nif_functions[] = {
-        {"get_version", 0, erl_yaml_get_version, 0},
-        {"get_version_string", 0, erl_yaml_get_version_string, 0},
+static ErlNifFunc eyaml_nif_functions[] = {
+        {"get_version", 0, eyaml_get_version, 0},
+        {"get_version_string", 0, eyaml_get_version_string, 0},
 };
 
-ERL_NIF_INIT(yaml_nif, erl_yaml_nif_functions, NULL, NULL, NULL, NULL);
+ERL_NIF_INIT(yaml_nif, eyaml_nif_functions, NULL, NULL, NULL, NULL);
