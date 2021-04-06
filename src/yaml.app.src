@@ -13,7 +13,7 @@
 %% IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 {application, yaml,
- [{description, "A binding for the libyaml YAML parsing library."},
+ [{description, "An implementation of the YAML data format."},
   {vsn, "git"},
   {registered, []},
   {applications,

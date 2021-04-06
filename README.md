@@ -1,6 +1,6 @@
 # Project
 This repository contains an implementation of the [YAML](https://yaml.org)
-data serialization format in Erlang.
+data format in Erlang.
 
 Low-level parsing is based on [libyaml](https://github.com/yaml/libyaml).
 
