@@ -1,0 +1,7 @@
+_build
+*.beam
+*.crashdump
+*.plt
+
+*.o
+*.so
