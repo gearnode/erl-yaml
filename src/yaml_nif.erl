@@ -14,7 +14,7 @@
 
 -module(yaml_nif).
 
--export([get_version_string/0]).
+-export([get_version/0, get_version_string/0]).
 
 -on_load(init/0).
 
@@ -22,6 +22,10 @@ init() ->
   PrivDir = code:priv_dir(yaml),
   LibPath = filename:join([PrivDir, "yaml_nif"]),
   erlang:load_nif(LibPath, []).
+
+-spec get_version() -> {integer(), integer(), integer()}.
+get_version() ->
+  erlang:nif_error(nif_not_loaded).
 
 -spec get_version_string() -> binary().
 get_version_string() ->

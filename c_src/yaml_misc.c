@@ -15,6 +15,21 @@
 #include "yaml_nif.h"
 
 ERL_NIF_TERM
+erl_yaml_get_version(ErlNifEnv *env,
+                     int argc, const ERL_NIF_TERM argv[]) {
+        int major, minor, patch;
+        ERL_NIF_TERM major_term, minor_term, patch_term;
+
+        yaml_get_version(&major, &minor, &patch);
+
+        major_term = enif_make_int(env, major);
+        minor_term = enif_make_int(env, minor);
+        patch_term = enif_make_int(env, patch);
+
+        return enif_make_tuple3(env, major_term, minor_term, patch_term);
+}
+
+ERL_NIF_TERM
 erl_yaml_get_version_string(ErlNifEnv *env,
                             int argc, const ERL_NIF_TERM argv[]) {
         const char *version;

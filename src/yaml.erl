@@ -14,8 +14,12 @@
 
 -module(yaml).
 
--export([libyaml_version/0]).
+-export([libyaml_version/0, libyaml_version_string/0]).
 
--spec libyaml_version() -> binary().
+-spec libyaml_version() -> {integer(), integer(), integer()}.
 libyaml_version() ->
+  yaml_nif:get_version().
+
+-spec libyaml_version_string() -> binary().
+libyaml_version_string() ->
   yaml_nif:get_version_string().

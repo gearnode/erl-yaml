@@ -23,6 +23,7 @@
 #define YAML_EXPORT(name_) \
         ERL_NIF_TERM name_(ErlNifEnv *, int, const ERL_NIF_TERM [])
 
+YAML_EXPORT(erl_yaml_get_version);
 YAML_EXPORT(erl_yaml_get_version_string);
 
 #endif

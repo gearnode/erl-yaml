@@ -15,6 +15,7 @@
 #include "yaml_nif.h"
 
 static ErlNifFunc erl_yaml_nif_functions[] = {
+        {"get_version", 0, erl_yaml_get_version, 0},
         {"get_version_string", 0, erl_yaml_get_version_string, 0},
 };
 
