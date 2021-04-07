@@ -14,6 +14,8 @@
 
 -module(yaml_events).
 
+-export([parse/1]).
+
 -export_type([event_type/0, event/0, event/1, mark/0,
               stream_start/0, document_start/0, document_end/0, alias/0,
               scalar/0, sequence_start/0, mapping_start/0,
@@ -101,3 +103,8 @@
 
 -type mapping_style() ::
         any | block | flow | {unknown, non_neg_integer()}.
+
+-spec parse(binary()) ->
+        {ok, [event()]} | {error, yaml:error_reason()}.
+parse(Data) ->
+  yaml_nif:parse(Data).
