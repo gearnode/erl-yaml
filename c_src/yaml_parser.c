@@ -51,12 +51,18 @@ eyaml_mapping_style_to_term(ErlNifEnv *, yaml_mapping_style_t);
 static ERL_NIF_TERM
 eyaml_scalar_style_to_term(ErlNifEnv *, yaml_scalar_style_t);
 
+struct eyaml_parser {
+        yaml_parser_t parser;
+        ERL_NIF_TERM events_term;
+};
 
 ERL_NIF_TERM
 eyaml_parse(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-        yaml_parser_t parser;
-        ERL_NIF_TERM events_term;
+        struct eyaml_nif_data *nif_data;
+        struct eyaml_parser *parser;
         ErlNifBinary data;
+
+        nif_data = enif_priv_data(env);
 
         if (argc != 1) {
                 return enif_make_badarg(env);
@@ -66,33 +72,36 @@ eyaml_parse(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
                 return enif_make_badarg(env);
         }
 
-        events_term = enif_make_list(env, 0);
+        parser = enif_alloc_resource(nif_data->parser_resource_type,
+                                     sizeof(*parser));
 
-        if (yaml_parser_initialize(&parser) == 0) {
+        parser->events_term = enif_make_list(env, 0);
+
+        if (yaml_parser_initialize(&parser->parser) == 0) {
                 return eyaml_error_tuple(env,
                                          enif_make_atom(env, "memory_error"));
         }
 
-        yaml_parser_set_input_string(&parser, data.data, data.size);
+        yaml_parser_set_input_string(&parser->parser, data.data, data.size);
 
         for (;;) {
                 ERL_NIF_TERM event_term;
                 yaml_event_t event;
                 bool end;
 
-                if (yaml_parser_parse(&parser, &event) == 0) {
+                if (yaml_parser_parse(&parser->parser, &event) == 0) {
                         ERL_NIF_TERM error;
 
-                        error = eyaml_parsing_error(env, &parser);
+                        error = eyaml_parsing_error(env, &parser->parser);
 
-                        yaml_parser_delete(&parser);
+                        yaml_parser_delete(&parser->parser);
 
                         return eyaml_error_tuple(env, error);
                 }
 
                 event_term = eyaml_event_to_term(env, &event);
-                events_term = enif_make_list_cell(env, event_term,
-                                                  events_term);
+                parser->events_term = enif_make_list_cell(env, event_term,
+                                                          parser->events_term);
 
                 end = (event.type == YAML_STREAM_END_EVENT);
 
@@ -103,11 +112,11 @@ eyaml_parse(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
                 }
         }
 
-        yaml_parser_delete(&parser);
+        yaml_parser_delete(&parser->parser);
 
-        eyaml_reverse_list(env, &events_term);
+        eyaml_reverse_list(env, &parser->events_term);
 
-        return eyaml_ok_tuple(env, events_term);
+        return eyaml_ok_tuple(env, parser->events_term);
 }
 
 ERL_NIF_TERM

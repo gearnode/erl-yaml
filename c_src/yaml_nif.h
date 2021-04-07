@@ -22,6 +22,12 @@
 
 #include <yaml.h>
 
+struct eyaml_nif_data {
+        ErlNifResourceType *parser_resource_type;
+};
+
+void eyaml_nif_data_dtor(ErlNifEnv *, void *);
+
 #define YAML_EXPORT(name_) \
         ERL_NIF_TERM name_(ErlNifEnv *, int, const ERL_NIF_TERM [])
 
@@ -37,5 +43,8 @@ ERL_NIF_TERM eyaml_binary_ustring(ErlNifEnv *, const unsigned char *);
 ERL_NIF_TERM eyaml_boolean(ErlNifEnv *, bool);
 void eyaml_reverse_list(ErlNifEnv *, ERL_NIF_TERM *);
 void eyaml_map_put(ErlNifEnv *env, ERL_NIF_TERM, ERL_NIF_TERM, ERL_NIF_TERM *);
+
+ErlNifResourceType *eyaml_create_resource_type(ErlNifEnv *, const char *,
+                                               ErlNifResourceDtor *);
 
 #endif

@@ -14,6 +14,14 @@
 
 #include "yaml_nif.h"
 
+void
+eyaml_nif_data_dtor(ErlNifEnv *env, void *ptr) {
+        struct eyaml_nif_data *data;
+
+        data = ptr;
+        enif_free(data);
+}
+
 static ErlNifFunc eyaml_nif_functions[] = {
         {"get_version", 0, eyaml_get_version, 0},
         {"get_version_string", 0, eyaml_get_version_string, 0},
@@ -21,4 +29,22 @@ static ErlNifFunc eyaml_nif_functions[] = {
         {"parse", 1, eyaml_parse, 0},
 };
 
-ERL_NIF_INIT(yaml_nif, eyaml_nif_functions, NULL, NULL, NULL, NULL);
+static int
+eyaml_load(ErlNifEnv *env, void **priv, ERL_NIF_TERM info) {
+        struct eyaml_nif_data *data;
+
+        data = enif_alloc(sizeof(*data));
+        if(data == NULL) {
+                enif_fprintf(stderr, "cannot allocate nif data: %s\n",
+                             strerror(errno));
+                return 1;
+        }
+
+        data->parser_resource_type =
+                eyaml_create_resource_type(env, "parser", eyaml_nif_data_dtor);
+
+        *priv = (void *)data;
+        return 0;
+}
+
+ERL_NIF_INIT(yaml_nif, eyaml_nif_functions, eyaml_load, NULL, NULL, NULL);

@@ -63,3 +63,20 @@ eyaml_map_put(ErlNifEnv *env, ERL_NIF_TERM key_term, ERL_NIF_TERM value_term,
         enif_make_map_put(env, *map_term, key_term, value_term, &map_term_2);
         *map_term = map_term_2;
 }
+
+ErlNifResourceType *
+eyaml_create_resource_type(ErlNifEnv *env, const char *name,
+                           ErlNifResourceDtor *dtor) {
+        ErlNifResourceFlags flags;
+        ErlNifResourceType *type;
+
+        flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
+
+        type = enif_open_resource_type(env, NULL, name, NULL, flags, NULL);
+        if (type == NULL) {
+                enif_fprintf(stderr, "cannot open resource type '%s'\n");
+                return NULL;
+        }
+
+        return type;
+}
