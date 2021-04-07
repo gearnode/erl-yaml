@@ -15,6 +15,9 @@
 #include "yaml_nif.h"
 
 static ERL_NIF_TERM
+eyaml_parse_1(ErlNifEnv *, int, const ERL_NIF_TERM []);
+
+static ERL_NIF_TERM
 eyaml_parsing_error(ErlNifEnv *, const yaml_parser_t *);
 static ERL_NIF_TERM
 eyaml_mark_to_term(ErlNifEnv *, const yaml_mark_t *);
@@ -61,6 +64,7 @@ eyaml_parse(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
         struct eyaml_nif_data *nif_data;
         struct eyaml_parser *parser;
         ErlNifBinary data;
+        ERL_NIF_TERM parser_term;
 
         nif_data = enif_priv_data(env);
 
@@ -81,8 +85,31 @@ eyaml_parse(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
                 return eyaml_error_tuple(env,
                                          enif_make_atom(env, "memory_error"));
         }
-
         yaml_parser_set_input_string(&parser->parser, data.data, data.size);
+
+        parser_term = enif_make_resource(env, parser);
+        enif_release_resource(parser);
+
+        return eyaml_parse_1(env, 1, &parser_term);
+}
+
+ERL_NIF_TERM
+eyaml_parse_1(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+        struct eyaml_nif_data *nif_data;
+        struct eyaml_parser *parser;
+        int ret;
+
+        nif_data = enif_priv_data(env);
+
+        if (argc != 1) {
+                return enif_make_badarg(env);
+        }
+
+        ret = enif_get_resource(env, argv[0], nif_data->parser_resource_type,
+                                (void **)&parser);
+        if (ret == 0) {
+                return enif_make_badarg(env);
+        }
 
         for (;;) {
                 ERL_NIF_TERM event_term;
