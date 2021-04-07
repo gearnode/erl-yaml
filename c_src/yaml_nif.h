@@ -36,6 +36,8 @@ YAML_EXPORT(eyaml_get_version_string);
 
 YAML_EXPORT(eyaml_parse);
 
+void eyaml_parser_delete(ErlNifEnv *, void *);
+
 ERL_NIF_TERM eyaml_ok_tuple(ErlNifEnv *, ERL_NIF_TERM);
 ERL_NIF_TERM eyaml_error_tuple(ErlNifEnv *, ERL_NIF_TERM);
 ERL_NIF_TERM eyaml_binary_string(ErlNifEnv *, const char *);

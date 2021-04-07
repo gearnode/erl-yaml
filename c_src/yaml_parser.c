@@ -55,9 +55,47 @@ static ERL_NIF_TERM
 eyaml_scalar_style_to_term(ErlNifEnv *, yaml_scalar_style_t);
 
 struct eyaml_parser {
-        yaml_parser_t parser;
         ERL_NIF_TERM events_term;
+
+        yaml_parser_t parser;
+
+        size_t max_block_size;
+        size_t block_size;
 };
+
+struct eyaml_parser *
+eyaml_parser_new(ErlNifEnv *env, ErlNifBinary bin) {
+        struct eyaml_nif_data *nif_data;
+        struct eyaml_parser *parser;
+
+        nif_data = enif_priv_data(env);
+
+        parser = enif_alloc_resource(nif_data->parser_resource_type,
+                                     sizeof(*parser));
+
+        if (yaml_parser_initialize(&parser->parser) == 0) {
+                return NULL;
+        }
+        yaml_parser_set_input_string(&parser->parser, bin.data, bin.size);
+
+        parser->events_term = enif_make_list(env, 0);
+
+        parser->max_block_size = (1 << 20);
+        parser->block_size = 0;
+
+        return parser;
+}
+
+void
+eyaml_parser_delete(ErlNifEnv *env, void *ptr) {
+        struct eyaml_parser *parser;
+
+        parser = ptr;
+
+        yaml_parser_delete(&parser->parser);
+
+        enif_free(parser);
+}
 
 ERL_NIF_TERM
 eyaml_parse(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
@@ -76,16 +114,13 @@ eyaml_parse(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
                 return enif_make_badarg(env);
         }
 
-        parser = enif_alloc_resource(nif_data->parser_resource_type,
-                                     sizeof(*parser));
+        parser = eyaml_parser_new(env, data);
+        if (!parser) {
+                ERL_NIF_TERM reason_term;
 
-        parser->events_term = enif_make_list(env, 0);
-
-        if (yaml_parser_initialize(&parser->parser) == 0) {
-                return eyaml_error_tuple(env,
-                                         enif_make_atom(env, "memory_error"));
+                reason_term = enif_make_atom(env, "memory_error");
+                return eyaml_error_tuple(env, reason_term);
         }
-        yaml_parser_set_input_string(&parser->parser, data.data, data.size);
 
         parser_term = enif_make_resource(env, parser);
         enif_release_resource(parser);
@@ -114,17 +149,19 @@ eyaml_parse_1(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
         for (;;) {
                 ERL_NIF_TERM event_term;
                 yaml_event_t event;
+                size_t prev_offset, offset, nb_consumed_bytes;
                 bool end;
+
+                prev_offset = parser->parser.mark.index;
 
                 if (yaml_parser_parse(&parser->parser, &event) == 0) {
                         ERL_NIF_TERM error;
 
                         error = eyaml_parsing_error(env, &parser->parser);
-
-                        yaml_parser_delete(&parser->parser);
-
                         return eyaml_error_tuple(env, error);
                 }
+
+                offset = parser->parser.mark.index;
 
                 event_term = eyaml_event_to_term(env, &event);
                 parser->events_term = enif_make_list_cell(env, event_term,
@@ -137,9 +174,28 @@ eyaml_parse_1(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
                 if (end) {
                         break;
                 }
-        }
 
-        yaml_parser_delete(&parser->parser);
+                nb_consumed_bytes = offset - prev_offset;
+                parser->block_size += nb_consumed_bytes;
+
+                if (parser->block_size > parser->max_block_size) {
+                        int percent;
+
+                        percent = parser->block_size * 100;
+                        percent /= parser->max_block_size;
+
+                        if (percent > 100) percent = 100;
+                        if (percent == 0) percent = 1;
+
+                        if (enif_consume_timeslice(env, percent) == 1) {
+                                parser->block_size = 0;
+
+                                return enif_schedule_nif(env, "parse_1", 0,
+                                                         eyaml_parse_1,
+                                                         argc, argv);
+                        }
+                }
+        }
 
         eyaml_reverse_list(env, &parser->events_term);
 
