@@ -20,6 +20,6 @@
    [kernel,
     stdlib]},
   {env, []},
-  {modules, []}],
+  {modules, []},
 
-  {licenses, ["ISC"]}}.
+  {licenses, ["ISC"]}]}.
