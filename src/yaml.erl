@@ -14,13 +14,25 @@
 
 -module(yaml).
 
--export([libyaml_version/0, libyaml_version_string/0]).
+-export([libyaml_version/0, libyaml_version_string/0,
+         is_version_supported/1]).
 
--export_type([error_reason/0]).
+-export_type([version/0,
+              value/0, scalar/0, sequence/0, mapping/0,
+              error_reason/0]).
+
+-type version() :: {non_neg_integer(), non_neg_integer()}.
+
+-type value() :: scalar() | sequence() | mapping().
+-type scalar() :: binary(). % TODO
+-type sequence() :: [value()].
+-type mapping() :: #{value() := value()}.
 
 -type error_reason() ::
         memory_error
-      | {parsing_error, binary(), yaml_events:mark()}.
+      | {parsing_error, binary(), yaml_events:mark()}
+      | {unsupported_encoding, yaml_events:encoding()}
+      | {unsupported_version, version()}.
 
 -spec libyaml_version() -> {integer(), integer(), integer()}.
 libyaml_version() ->
@@ -29,3 +41,9 @@ libyaml_version() ->
 -spec libyaml_version_string() -> binary().
 libyaml_version_string() ->
   yaml_nif:get_version_string().
+
+-spec is_version_supported(version()) -> boolean().
+is_version_supported({1, _}) ->
+  true;
+is_version_supported(_) ->
+  false.
