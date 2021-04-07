@@ -132,9 +132,9 @@ ERL_NIF_TERM
 eyaml_mark_to_term(ErlNifEnv *env, const yaml_mark_t *mark) {
         ERL_NIF_TERM offset_term, line_term, column_term;
 
-        offset_term = enif_make_int(env, mark->index);
-        line_term = enif_make_int(env, mark->line + 1);
-        column_term = enif_make_int(env, mark->column + 1);
+        offset_term = enif_make_ulong(env, mark->index);
+        line_term = enif_make_ulong(env, mark->line + 1);
+        column_term = enif_make_ulong(env, mark->column + 1);
 
         return enif_make_tuple3(env, offset_term, line_term, column_term);
 }
@@ -355,7 +355,7 @@ eyaml_scalar_to_term(ErlNifEnv *env, const yaml_event_t *event) {
         value_terms[0] = eyaml_binary_ustring(env, value);
 
         key_terms[1] = enif_make_atom(env, "length");
-        value_terms[1] = enif_make_uint(env, length);
+        value_terms[1] = enif_make_ulong(env, length);
 
         key_terms[2] = enif_make_atom(env, "plain_implicit");
         value_terms[2] = eyaml_boolean(env, plain_implicit);
