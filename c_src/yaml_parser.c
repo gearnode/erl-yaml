@@ -80,7 +80,7 @@ eyaml_parser_new(ErlNifEnv *env, ErlNifBinary bin) {
 
         parser->events_term = enif_make_list(env, 0);
 
-        parser->max_block_size = (1 << 20);
+        parser->max_block_size = (1 << 16); // 64KiB
         parser->block_size = 0;
 
         return parser;
