@@ -89,7 +89,7 @@ build_node([Event = #{type := alias, data := #{anchor := Anchor}} | Events],
     {ok, TargetNode} ->
       process_node(Events, State#{stack => [TargetNode | Stack]});
     error ->
-      Position = mark_position(maps:get(start, Event)),
+      Position = maps:get(start, Event),
       throw({error, {unknown_alias, Anchor, Position}})
   end;
 build_node([Event = #{type := scalar} | Events], State) ->
@@ -111,7 +111,7 @@ build_node([#{type := mapping_end} | Events],
   process_node(Events, State#{stack => [Node2 | Nodes]}).
 
 -spec event_node(yaml_events:event()) -> tree_node().
-event_node(#{type := Type, data := Data, start := Mark}) ->
+event_node(#{type := Type, data := Data, start := Position}) ->
   NodeData = case Type of
                scalar ->
                  {scalar, maps:get(value, Data)};
@@ -121,7 +121,7 @@ event_node(#{type := Type, data := Data, start := Mark}) ->
                  {mapping, []}
              end,
   Node0 = #{data => NodeData,
-            position => mark_position(Mark)},
+            position => Position},
   case maps:find(anchor, Data) of
     {ok, Anchor} ->
       Node0#{anchor => Anchor};
@@ -181,7 +181,3 @@ check_document_version(#{type := document_start, data := Data}) ->
     error ->
       true
   end.
-
--spec mark_position(yaml_events:mark()) -> yaml:position().
-mark_position({_, Line, Column}) ->
-  {Line+1, Column+1}.

@@ -222,13 +222,13 @@ eyaml_syntax_error(ErlNifEnv *env, const yaml_parser_t *parser) {
 
 ERL_NIF_TERM
 eyaml_mark_to_term(ErlNifEnv *env, const yaml_mark_t *mark) {
-        ERL_NIF_TERM offset_term, line_term, column_term;
+        ERL_NIF_TERM line_term, column_term, offset_term;
 
+        line_term = enif_make_ulong(env, mark->line + 1);
+        column_term = enif_make_ulong(env, mark->column + 1);
         offset_term = enif_make_ulong(env, mark->index);
-        line_term = enif_make_ulong(env, mark->line);
-        column_term = enif_make_ulong(env, mark->column);
 
-        return enif_make_tuple3(env, offset_term, line_term, column_term);
+        return enif_make_tuple3(env, line_term, column_term, offset_term);
 }
 
 ERL_NIF_TERM

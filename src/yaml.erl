@@ -28,11 +28,13 @@
 -type sequence() :: [value()].
 -type mapping() :: #{value() := value()}.
 
--type position() :: {Line :: pos_integer(), Column :: pos_integer()}.
+-type position() :: {Line :: pos_integer(),
+                     Column :: pos_integer(),
+                     Offset :: non_neg_integer()}.
 
 -type error_reason() ::
         memory_error
-      | {syntax_error, binary(), yaml_events:mark()}
+      | {syntax_error, binary(), position()}
       | {unsupported_encoding, yaml_events:encoding()}
       | {unsupported_version, version()}
       | {unknown_alias, binary(), position()}.
