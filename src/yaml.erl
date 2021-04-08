@@ -32,7 +32,7 @@
 
 -type error_reason() ::
         memory_error
-      | {parsing_error, binary(), yaml_events:mark()}
+      | {syntax_error, binary(), yaml_events:mark()}
       | {unsupported_encoding, yaml_events:encoding()}
       | {unsupported_version, version()}
       | {unknown_alias, binary(), position()}.

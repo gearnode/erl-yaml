@@ -18,7 +18,7 @@ static ERL_NIF_TERM
 eyaml_parse_1(ErlNifEnv *, int, const ERL_NIF_TERM []);
 
 static ERL_NIF_TERM
-eyaml_parsing_error(ErlNifEnv *, const yaml_parser_t *);
+eyaml_syntax_error(ErlNifEnv *, const yaml_parser_t *);
 static ERL_NIF_TERM
 eyaml_mark_to_term(ErlNifEnv *, const yaml_mark_t *);
 static ERL_NIF_TERM
@@ -157,7 +157,7 @@ eyaml_parse_1(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
                 if (yaml_parser_parse(&parser->parser, &event) == 0) {
                         ERL_NIF_TERM error;
 
-                        error = eyaml_parsing_error(env, &parser->parser);
+                        error = eyaml_syntax_error(env, &parser->parser);
                         return eyaml_error_tuple(env, error);
                 }
 
@@ -203,7 +203,7 @@ eyaml_parse_1(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
 }
 
 ERL_NIF_TERM
-eyaml_parsing_error(ErlNifEnv *env, const yaml_parser_t *parser) {
+eyaml_syntax_error(ErlNifEnv *env, const yaml_parser_t *parser) {
         ERL_NIF_TERM reason_term, message_term, mark_tuple;
         const char *message;
 
@@ -213,7 +213,7 @@ eyaml_parsing_error(ErlNifEnv *env, const yaml_parser_t *parser) {
                 message = parser->problem;
         }
 
-        reason_term = enif_make_atom(env, "parsing_error");
+        reason_term = enif_make_atom(env, "syntax_error");
         message_term = eyaml_binary_string(env, message);
         mark_tuple = eyaml_mark_to_term(env, &parser->problem_mark);
 
