@@ -70,4 +70,8 @@ build_test_() ->
                                    position => {1,9,8},
                                    anchor => <<"a">>}]},
                              position => {1,1,0}}}]},
-                 Build(<<"[&a 1, [&a 2, *a], *a]">>))].
+                 Build(<<"[&a 1, [&a 2, *a], *a]">>)),
+   ?_assertEqual({error, {unknown_alias, <<"b">>, {1,8,7}}},
+                 Build(<<"[&a 1, *b]">>)),
+   ?_assertEqual({error, {unknown_alias, <<"a">>, {2,5,14}}},
+                 Build(<<"--- &a 42\n--- *a">>))].
