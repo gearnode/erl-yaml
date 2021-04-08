@@ -225,8 +225,8 @@ eyaml_mark_to_term(ErlNifEnv *env, const yaml_mark_t *mark) {
         ERL_NIF_TERM offset_term, line_term, column_term;
 
         offset_term = enif_make_ulong(env, mark->index);
-        line_term = enif_make_ulong(env, mark->line + 1);
-        column_term = enif_make_ulong(env, mark->column + 1);
+        line_term = enif_make_ulong(env, mark->line);
+        column_term = enif_make_ulong(env, mark->column);
 
         return enif_make_tuple3(env, offset_term, line_term, column_term);
 }

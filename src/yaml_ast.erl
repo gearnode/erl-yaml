@@ -25,7 +25,8 @@
         #{root := tree_node()}.
 
 -type tree_node() ::
-        #{data := node_data()}.
+        #{data := node_data(),
+          position := yaml:position()}.
 
 -type node_data() ::
         {alias, binary()}
@@ -80,26 +81,34 @@ build_document_root(Events, State = #{documents := Documents}) ->
 
 -spec build_node([yaml_events:event()], state()) ->
         {tree_node(), [yaml_events:event()], state()}.
-build_node([#{type := alias, data := #{anchor := Anchor}} | Events],
+build_node([#{type := alias,
+              data := #{anchor := Anchor},
+              start := Mark} | Events],
            State = #{stack := Stack}) ->
-  Node = #{data => {alias, Anchor}},
+  Node = #{data => {alias, Anchor},
+           position => mark_position(Mark)},
   process_node(Events, State#{stack => [Node | Stack]});
-build_node([#{type := scalar, data := #{value := Value}} | Events],
+build_node([#{type := scalar,
+              data := #{value := Value},
+              start := Mark} | Events],
            State = #{stack := Stack}) ->
-  Node = #{data => {scalar, Value}},
+  Node = #{data => {scalar, Value},
+           position => mark_position(Mark)},
   process_node(Events, State#{stack => [Node | Stack]});
-build_node([#{type := sequence_start, data := _Data} | Events],
+build_node([#{type := sequence_start, start := Mark} | Events],
            State = #{stack := Stack}) ->
-  Node = #{data => {sequence, []}},
+  Node = #{data => {sequence, []},
+           position => mark_position(Mark)},
   build_node(Events, State#{stack => [Node | Stack]});
 build_node([#{type := sequence_end} | Events],
            State = #{stack := [Node | Nodes]}) ->
   #{data := {sequence, Children}} = Node,
   Node2 = Node#{data => {sequence, lists:reverse(Children)}},
   process_node(Events, State#{stack => [Node2 | Nodes]});
-build_node([#{type := mapping_start, data := _Data} | Events],
+build_node([#{type := mapping_start, start := Mark} | Events],
            State = #{stack := Stack}) ->
-  Node = #{data => {mapping, []}},
+  Node = #{data => {mapping, []},
+           position => mark_position(Mark)},
   build_node(Events, State#{stack => [Node | Stack]});
 build_node([#{type := mapping_end} | Events],
            State = #{stack := [Node | Nodes]}) ->
@@ -151,3 +160,7 @@ check_document_version(#{type := document_start, data := Data}) ->
     error ->
       true
   end.
+
+-spec mark_position(yaml_events:mark()) -> yaml:position().
+mark_position({_, Line, Column}) ->
+  {Line+1, Column+1}.

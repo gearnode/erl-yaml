@@ -53,5 +53,5 @@ parse_test_() ->
                          data := #{implicit := true}},
                        #{type := stream_end}]},
                  Parse(<<"[1,{\"a\": 2}]">>)),
-   ?_assertMatch({error, {parsing_error, _, {2,1,3}}},
+   ?_assertMatch({error, {parsing_error, _, {2,0,2}}},
                  Parse(<<"[{]">>))].

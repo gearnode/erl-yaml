@@ -19,7 +19,7 @@
 
 -export_type([version/0,
               value/0, scalar/0, sequence/0, mapping/0,
-              error_reason/0]).
+              position/0, error_reason/0]).
 
 -type version() :: {non_neg_integer(), non_neg_integer()}.
 
@@ -27,6 +27,8 @@
 -type scalar() :: binary(). % TODO
 -type sequence() :: [value()].
 -type mapping() :: #{value() := value()}.
+
+-type position() :: {Line :: pos_integer(), Column :: pos_integer()}.
 
 -type error_reason() ::
         memory_error
