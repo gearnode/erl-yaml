@@ -26,18 +26,19 @@
 
 -type tree_node() ::
         #{data := node_data(),
-          position := yaml:position()}.
+          position := yaml:position(),
+          anchor => binary()}.
 
 -type node_data() ::
-        {alias, binary()}
-      | {scalar, yaml:scalar()}
+        {scalar, yaml:scalar()}
       | {sequence, [tree_node()]}
       | {mapping, [{tree_node(), tree_node() | undefined}]}.
 
 -type state() ::
         #{options := options(),
           documents := [document()],
-          stack := [tree_node()]}.
+          stack := [tree_node()],
+          anchors := #{binary() := tree_node()}}.
 
 -spec build([yaml_events:event()]) ->
         {ok, [document()]} | {error, yaml:error_reason()}.
@@ -49,7 +50,8 @@ build(Events) ->
 build(Events, Options) ->
   State = #{options => Options,
             documents => [],
-            stack => []},
+            stack => [],
+            anchors => #{}},
   try
     #{documents := Documents} = build_stream(Events, State),
     {ok, Documents}
@@ -77,44 +79,63 @@ build_document_root(Events, State = #{documents := Documents}) ->
   Document = #{root => Root},
   State3 = State2#{documents => [Document | Documents]},
   [#{type := document_end} | Events3] = Events2,
-  maybe_build_document(Events3, State3).
+  maybe_build_document(Events3, State3#{anchors => #{}}).
 
 -spec build_node([yaml_events:event()], state()) ->
         {tree_node(), [yaml_events:event()], state()}.
-build_node([#{type := alias,
-              data := #{anchor := Anchor},
-              start := Mark} | Events],
-           State = #{stack := Stack}) ->
-  Node = #{data => {alias, Anchor},
-           position => mark_position(Mark)},
-  process_node(Events, State#{stack => [Node | Stack]});
-build_node([#{type := scalar,
-              data := #{value := Value},
-              start := Mark} | Events],
-           State = #{stack := Stack}) ->
-  Node = #{data => {scalar, Value},
-           position => mark_position(Mark)},
-  process_node(Events, State#{stack => [Node | Stack]});
-build_node([#{type := sequence_start, start := Mark} | Events],
-           State = #{stack := Stack}) ->
-  Node = #{data => {sequence, []},
-           position => mark_position(Mark)},
-  build_node(Events, State#{stack => [Node | Stack]});
+build_node([Event = #{type := alias, data := #{anchor := Anchor}} | Events],
+           State = #{stack := Stack, anchors := Anchors}) ->
+  case maps:find(Anchor, Anchors) of
+    {ok, TargetNode} ->
+      process_node(Events, State#{stack => [TargetNode | Stack]});
+    error ->
+      Position = mark_position(maps:get(start, Event)),
+      throw({error, {unknown_alias, Anchor, Position}})
+  end;
+build_node([Event = #{type := scalar} | Events], State) ->
+  Node = event_node(Event),
+  process_node(Events, push_node(Node, State));
+build_node([Event = #{type := Type} | Events], State) when
+    Type =:= sequence_start; Type =:= mapping_start ->
+  Node = event_node(Event),
+  build_node(Events, push_node(Node, State));
 build_node([#{type := sequence_end} | Events],
            State = #{stack := [Node | Nodes]}) ->
   #{data := {sequence, Children}} = Node,
   Node2 = Node#{data => {sequence, lists:reverse(Children)}},
   process_node(Events, State#{stack => [Node2 | Nodes]});
-build_node([#{type := mapping_start, start := Mark} | Events],
-           State = #{stack := Stack}) ->
-  Node = #{data => {mapping, []},
-           position => mark_position(Mark)},
-  build_node(Events, State#{stack => [Node | Stack]});
 build_node([#{type := mapping_end} | Events],
            State = #{stack := [Node | Nodes]}) ->
   #{data := {mapping, Pairs}} = Node,
   Node2 = Node#{data => {mapping, lists:reverse(Pairs)}},
   process_node(Events, State#{stack => [Node2 | Nodes]}).
+
+-spec event_node(yaml_events:event()) -> tree_node().
+event_node(#{type := Type, data := Data, start := Mark}) ->
+  NodeData = case Type of
+               scalar ->
+                 {scalar, maps:get(value, Data)};
+               sequence_start ->
+                 {sequence, []};
+               mapping_start ->
+                 {mapping, []}
+             end,
+  Node0 = #{data => NodeData,
+            position => mark_position(Mark)},
+  case maps:find(anchor, Data) of
+    {ok, Anchor} ->
+      Node0#{anchor => Anchor};
+    error ->
+      Node0
+  end.
+
+-spec push_node(tree_node(), state()) -> state().
+push_node(Node = #{anchor := Anchor},
+          State = #{stack := Stack, anchors := Anchors}) ->
+  State#{stack => [Node | Stack],
+         anchors => Anchors#{Anchor => Node}};
+push_node(Node, State = #{stack := Stack}) ->
+  State#{stack => [Node | Stack]}.
 
 -spec process_node([yaml_events:event()], state()) ->
         {tree_node(), [yaml_events:event()], state()}.

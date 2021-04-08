@@ -50,4 +50,24 @@ build_test_() ->
                               #{data => {scalar, <<"false">>},
                                 position => {1,14}}}]},
                          position => {1,1}}}]},
-                 Build(<<"{a: true, b: \"false\"}">>))].
+                 Build(<<"{a: true, b: \"false\"}">>)),
+   ?_assertEqual({ok, [#{root =>
+                           #{data =>
+                               {sequence,
+                                [#{data => {scalar, <<"1">>},
+                                   position => {1,2},
+                                   anchor => <<"a">>},
+                                 #{data =>
+                                     {sequence,
+                                      [#{data => {scalar, <<"2">>},
+                                         position => {1,9},
+                                         anchor => <<"a">>},
+                                       #{data => {scalar, <<"2">>},
+                                         position => {1,9},
+                                         anchor => <<"a">>}]},
+                                   position => {1,8}},
+                                 #{data => {scalar, <<"2">>},
+                                   position => {1,9},
+                                   anchor => <<"a">>}]},
+                             position => {1,1}}}]},
+                 Build(<<"[&a 1, [&a 2, *a], *a]">>))].

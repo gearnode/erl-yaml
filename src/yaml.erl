@@ -34,7 +34,8 @@
         memory_error
       | {parsing_error, binary(), yaml_events:mark()}
       | {unsupported_encoding, yaml_events:encoding()}
-      | {unsupported_version, version()}.
+      | {unsupported_version, version()}
+      | {unknown_alias, binary(), position()}.
 
 -spec libyaml_version() -> {integer(), integer(), integer()}.
 libyaml_version() ->
