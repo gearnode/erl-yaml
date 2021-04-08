@@ -26,6 +26,7 @@
 
 -type tree_node() ::
         #{data := node_data(),
+          tag := binary(),
           position := yaml:position(),
           anchor => binary()}.
 
@@ -121,6 +122,7 @@ event_node(#{type := Type, data := Data, start := Position}) ->
                  {mapping, []}
              end,
   Node0 = #{data => NodeData,
+            tag => maps:get(tag, Data, <<"?">>),
             position => Position},
   case maps:find(anchor, Data) of
     {ok, Anchor} ->

@@ -21,56 +21,65 @@ build_test_() ->
               {ok, Events} = yaml_events:parse(Data),
               yaml_ast:build(Events)
           end,
-  [?_assertEqual({ok, [#{root =>
-                           #{data => {scalar, <<"42">>},
-                             position => {1,1,0}}}]},
+  [?_assertMatch({ok, [#{root :=
+                           #{data := {scalar, <<"42">>}}}]},
                  Build(<<"42">>)),
-   ?_assertEqual({ok,
-                  [#{root =>
-                       #{data =>
+   ?_assertMatch({ok,
+                  [#{root :=
+                       #{data :=
                            {sequence,
-                            [#{data => {scalar, <<"1">>},
-                               position => {1,2,1}},
-                             #{data => {scalar, <<"2">>},
-                               position => {1,4,3}},
-                             #{data => {scalar, <<"3">>},
-                               position => {1,6,5}}]},
-                         position => {1,1,0}}}]},
+                            [#{data := {scalar, <<"1">>}},
+                             #{data := {scalar, <<"2">>}},
+                             #{data := {scalar, <<"3">>}}]}}}]},
                  Build(<<"[1,2,3]">>)),
-   ?_assertEqual({ok,
-                  [#{root =>
-                       #{data =>
+   ?_assertMatch({ok,
+                  [#{root :=
+                       #{data :=
                            {mapping,
-                            [{#{data => {scalar, <<"a">>},
-                                position => {1,2,1}},
-                              #{data => {scalar, <<"true">>},
-                                position => {1,5,4}}},
-                             {#{data => {scalar, <<"b">>},
-                                position => {1,11,10}},
-                              #{data => {scalar, <<"false">>},
-                                position => {1,14,13}}}]},
-                         position => {1,1,0}}}]},
+                            [{#{data := {scalar, <<"a">>}},
+                              #{data := {scalar, <<"true">>}}},
+                             {#{data := {scalar, <<"b">>}},
+                              #{data := {scalar, <<"false">>}}}]}}}]},
                  Build(<<"{a: true, b: \"false\"}">>)),
-   ?_assertEqual({ok, [#{root =>
-                           #{data =>
+   ?_assertMatch({ok, [#{root :=
+                           #{data := {scalar, <<"1">>}}},
+                       #{root :=
+                           #{data := {scalar, <<"2">>}}}]},
+                 Build(<<"---\n1\n---\n2\n">>)),
+   ?_assertMatch({ok, [#{root :=
+                           #{data :=
                                {sequence,
-                                [#{data => {scalar, <<"1">>},
-                                   position => {1,2,1},
-                                   anchor => <<"a">>},
-                                 #{data =>
+                                [#{data := {scalar, <<"1">>},
+                                   anchor := <<"a">>},
+                                 #{data :=
                                      {sequence,
-                                      [#{data => {scalar, <<"2">>},
-                                         position => {1,9,8},
-                                         anchor => <<"a">>},
-                                       #{data => {scalar, <<"2">>},
-                                         position => {1,9,8},
-                                         anchor => <<"a">>}]},
-                                   position => {1,8,7}},
-                                 #{data => {scalar, <<"2">>},
-                                   position => {1,9,8},
-                                   anchor => <<"a">>}]},
-                             position => {1,1,0}}}]},
+                                      [#{data := {scalar, <<"2">>},
+                                         anchor := <<"a">>},
+                                       #{data := {scalar, <<"2">>},
+                                         anchor := <<"a">>}]}},
+                                 #{data := {scalar, <<"2">>},
+                                   anchor := <<"a">>}]}}}]},
                  Build(<<"[&a 1, [&a 2, *a], *a]">>)),
+   ?_assertMatch({ok, [#{root :=
+                           #{data :=
+                               {sequence,
+                                [#{data := {scalar, <<"1">>},
+                                   tag := <<"tag:yaml.org,2002:str">>},
+                                 #{data := {scalar, <<"2">>},
+                                   tag := <<"tag:yaml.org,2002:int">>},
+                                 #{data := {scalar, <<"3">>},
+                                   tag := <<"tag:example.com:foo">>},
+                                 #{data := {scalar, <<"4">>},
+                                   tag := <<"?">>}]},
+                             tag := <<"tag:yaml.org,2002:set">>}}]},
+                 Build(<<"%TAG ! tag:example.com:\n"
+                         "---\n"
+                         "!!set ["
+                         "  !!str 1,"
+                         "  !<tag:yaml.org,2002:int> '2',"
+                         "  !foo 3,",
+                         "  4"
+                         "]">>)),
    ?_assertEqual({error, {unknown_alias, <<"b">>, {1,8,7}}},
                  Build(<<"[&a 1, *b]">>)),
    ?_assertEqual({error, {unknown_alias, <<"a">>, {2,5,14}}},
