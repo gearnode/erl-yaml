@@ -82,8 +82,10 @@ decode_scalar(Value, plain, _,
 decode_tagged_value(Value, Tag,
                     #{schema := #{tagged_value_decoder := Decoder}}) ->
   case Decoder(Tag, Value) of
-    {ok, Value} ->
-      Value;
-    error ->
+    {ok, Term} ->
+      Term;
+    {error, Reason} ->
+      throw({error, {invalid_value, Reason, Tag, Value}});
+    unknown_tag ->
       throw({error, {unknown_tag, Tag}})
   end.

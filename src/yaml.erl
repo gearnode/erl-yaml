@@ -17,13 +17,15 @@
 -export([libyaml_version/0, libyaml_version_string/0,
          is_version_supported/1,
          parse/1, parse/2,
-         failsafe_schema/0]).
+         failsafe_schema/0, json_schema/0]).
 
 -export_type([version/0,
               document/0, value/0, scalar/0, sequence/0, mapping/0,
               undecoded_value/0,
               parsing_options/0,
-              schema/0, tagged_value_decoder/0, plain_scalar_identifier/0,
+              schema/0, tagged_value_decoder/0,
+              tagged_value_decoding_result/0,
+              plain_scalar_identifier/0,
               tag/0, position/0, error_reason/0]).
 
 -type version() :: {non_neg_integer(), non_neg_integer()}.
@@ -44,7 +46,10 @@
           plain_scalar_identifier := plain_scalar_identifier()}.
 
 -type tagged_value_decoder() ::
-        fun((tag(), undecoded_value()) -> {ok, value()} | unknown).
+        fun((tag(), undecoded_value()) -> tagged_value_decoding_result()).
+
+-type tagged_value_decoding_result() ::
+        {ok, value()} | {error, term()} | unknown_tag.
 
 -type plain_scalar_identifier() ::
         fun((binary()) -> tag()).
@@ -61,7 +66,8 @@
       | {unsupported_encoding, yaml_events:encoding()}
       | {unsupported_version, version()}
       | {unknown_alias, binary(), position()}
-      | {unknown_tag, tag()}.
+      | {unknown_tag, tag()}
+      | {invalid_value, term(), tag(), value()}.
 
 -spec libyaml_version() -> {integer(), integer(), integer()}.
 libyaml_version() ->
@@ -89,3 +95,7 @@ parse(Data, Options) ->
 -spec failsafe_schema() -> schema().
 failsafe_schema() ->
   yaml_schema_failsafe:schema().
+
+-spec json_schema() -> schema().
+json_schema() ->
+  yaml_schema_json:schema().
