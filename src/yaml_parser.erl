@@ -60,37 +60,38 @@ node_value(Node = #{data := {scalar, Value, Style}}, Options) ->
 -spec decode_collection(Value, yaml_ast:tree_node(), yaml:parsing_options()) ->
         yaml:value() when
     Value :: yaml:sequence() | yaml:mapping().
-decode_collection(Value, #{tag := Tag}, Options) ->
-  decode_tagged_value(Value, Tag, Options);
+decode_collection(Value, #{tag := Tag, position := Position}, Options) ->
+  decode_tagged_value(Value, Tag, Position, Options);
 decode_collection(Value, _, _) ->
   Value.
 
 -spec decode_scalar(binary(), plain | non_plain, yaml_ast:tree_node(),
                     yaml:parsing_options()) ->
         yaml:value().
-decode_scalar(Value, _, #{tag := Tag}, Options) ->
-  decode_tagged_value(Value, Tag, Options);
+decode_scalar(Value, _, #{tag := Tag, position := Position}, Options) ->
+  decode_tagged_value(Value, Tag, Position, Options);
 decode_scalar(Value, non_plain, _, _) ->
   Value;
-decode_scalar(Value, plain, _,
+decode_scalar(Value, plain, #{position := Position},
               Options = #{schema := #{plain_scalar_identifier := Id}}) ->
   case Id(Value) of
     {tag, Tag} ->
-      decode_tagged_value(Value, Tag, Options);
+      decode_tagged_value(Value, Tag, Position, Options);
     {value, Term} ->
       Term
   end.
 
--spec decode_tagged_value(Value, yaml:tag(), yaml:parsing_options()) ->
+-spec decode_tagged_value(Value, yaml:tag(), yaml:position(),
+                          yaml:parsing_options()) ->
         yaml:value() when
     Value :: binary() | yaml:sequence() | yaml:mapping().
-decode_tagged_value(Value, Tag,
+decode_tagged_value(Value, Tag, Position,
                     #{schema := #{tagged_value_decoder := Decoder}}) ->
   case Decoder(Tag, Value) of
     {ok, Term} ->
       Term;
     {error, Reason} ->
-      throw({error, {invalid_value, Reason, Tag, Value}});
+      throw({error, {invalid_value, Reason, Tag, Value, Position}});
     unknown_tag ->
-      throw({error, {unknown_tag, Tag}})
+      throw({error, {unknown_tag, Tag, Position}})
   end.

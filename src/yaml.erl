@@ -70,8 +70,8 @@
       | {unsupported_encoding, yaml_events:encoding()}
       | {unsupported_version, version()}
       | {unknown_alias, binary(), position()}
-      | {unknown_tag, tag()}
-      | {invalid_value, term(), tag(), value()}.
+      | {unknown_tag, tag(), position()}
+      | {invalid_value, term(), tag(), value(), position()}.
 
 -spec libyaml_version() -> {integer(), integer(), integer()}.
 libyaml_version() ->
