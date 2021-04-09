@@ -24,11 +24,26 @@ schema() ->
 -spec decode_tagged_value(yaml:tag(), yaml:undecoded_value()) ->
         yaml:tagged_value_decoding_result().
 decode_tagged_value(<<"tag:yaml.org,2002:map">>, Value) ->
-  {ok, Value};
+  if
+    is_map(Value) ->
+      {ok, Value};
+    true ->
+      {error, invalid_mapping}
+  end;
 decode_tagged_value(<<"tag:yaml.org,2002:seq">>, Value) ->
-  {ok, Value};
+  if
+    is_list(Value) ->
+      {ok, Value};
+    true ->
+      {error, invalid_sequence}
+  end;
 decode_tagged_value(<<"tag:yaml.org,2002:str">>, Value) ->
-  {ok, Value};
+  if
+    is_binary(Value) ->
+      {ok, Value};
+    true ->
+      {error, invalid_string}
+  end;
 decode_tagged_value(_, _) ->
   unknown_tag.
 
