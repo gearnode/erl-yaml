@@ -16,32 +16,40 @@
 
 -export([libyaml_version/0, libyaml_version_string/0,
          is_version_supported/1,
-         parse/1, parse/2]).
+         parse/1, parse/2,
+         failsafe_schema/0]).
 
 -export_type([version/0,
               document/0, value/0, scalar/0, sequence/0, mapping/0,
+              undecoded_value/0,
               parsing_options/0,
-              tag/0, tag_decoder/0, schema/0,
-              position/0, error_reason/0]).
+              schema/0, tagged_value_decoder/0, plain_scalar_decoder/0,
+              tag/0, position/0, error_reason/0]).
 
 -type version() :: {non_neg_integer(), non_neg_integer()}.
 
 -type document() :: value().
--type value() :: scalar() | sequence() | mapping().
+-type value() :: scalar() | sequence() | mapping() | term().
 -type scalar() :: term().
 -type sequence() :: [value()].
 -type mapping() :: #{value() := value()}.
 
+-type undecoded_value() :: binary() | sequence() | mapping().
+
 -type parsing_options() ::
         #{schema => schema()}.
 
+-type schema() ::
+        #{tagged_value_decoder := tagged_value_decoder(),
+          plain_scalar_decoder := plain_scalar_decoder()}.
+
+-type tagged_value_decoder() ::
+        fun((tag(), undecoded_value()) -> {ok, value()} | unknown).
+
+-type plain_scalar_decoder() ::
+        fun((binary()) -> value()).
+
 -type tag() :: binary().
-
--type tag_decoder() ::
-        fun((tag(), binary() | sequence() | mapping()) ->
-               {ok, value()} | {error, term()}).
-
--type schema() :: #{tag() := tag_decoder()}.
 
 -type position() :: {Line :: pos_integer(),
                      Column :: pos_integer(),
@@ -77,3 +85,7 @@ parse(Data) ->
         {ok, [document()]} | {error, error_reason()}.
 parse(Data, Options) ->
   yaml_parser:parse(Data, Options).
+
+-spec failsafe_schema() -> schema().
+failsafe_schema() ->
+  yaml_schema_failsafe:schema().

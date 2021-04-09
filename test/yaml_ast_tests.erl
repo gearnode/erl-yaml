@@ -22,54 +22,54 @@ build_test_() ->
               yaml_ast:build(Events, #{})
           end,
   [?_assertMatch({ok, [#{root :=
-                           #{data := {scalar, <<"42">>}}}]},
+                           #{data := {scalar, <<"42">>, plain}}}]},
                  Build(<<"42">>)),
    ?_assertMatch({ok,
                   [#{root :=
                        #{data :=
                            {sequence,
-                            [#{data := {scalar, <<"1">>}},
-                             #{data := {scalar, <<"2">>}},
-                             #{data := {scalar, <<"3">>}}]}}}]},
+                            [#{data := {scalar, <<"1">>, plain}},
+                             #{data := {scalar, <<"2">>, plain}},
+                             #{data := {scalar, <<"3">>, plain}}]}}}]},
                  Build(<<"[1,2,3]">>)),
    ?_assertMatch({ok,
                   [#{root :=
                        #{data :=
                            {mapping,
-                            [{#{data := {scalar, <<"a">>}},
-                              #{data := {scalar, <<"true">>}}},
-                             {#{data := {scalar, <<"b">>}},
-                              #{data := {scalar, <<"false">>}}}]}}}]},
-                 Build(<<"{a: true, b: \"false\"}">>)),
+                            [{#{data := {scalar, <<"a">>, plain}},
+                              #{data := {scalar, <<"true">>, non_plain}}},
+                             {#{data := {scalar, <<"b">>, plain}},
+                              #{data := {scalar, <<"false">>, plain}}}]}}}]},
+                 Build(<<"{a: \"true\", b: false}">>)),
    ?_assertMatch({ok, [#{root :=
-                           #{data := {scalar, <<"1">>}}},
+                           #{data := {scalar, <<"1">>, plain}}},
                        #{root :=
-                           #{data := {scalar, <<"2">>}}}]},
+                           #{data := {scalar, <<"2">>, plain}}}]},
                  Build(<<"---\n1\n---\n2\n">>)),
    ?_assertMatch({ok, [#{root :=
                            #{data :=
                                {sequence,
-                                [#{data := {scalar, <<"1">>},
+                                [#{data := {scalar, <<"1">>, plain},
                                    anchor := <<"a">>},
                                  #{data :=
                                      {sequence,
-                                      [#{data := {scalar, <<"2">>},
+                                      [#{data := {scalar, <<"2">>, plain},
                                          anchor := <<"a">>},
-                                       #{data := {scalar, <<"2">>},
+                                       #{data := {scalar, <<"2">>, plain},
                                          anchor := <<"a">>}]}},
-                                 #{data := {scalar, <<"2">>},
+                                 #{data := {scalar, <<"2">>, plain},
                                    anchor := <<"a">>}]}}}]},
                  Build(<<"[&a 1, [&a 2, *a], *a]">>)),
    ?_assertMatch({ok, [#{root :=
                            #{data :=
                                {sequence,
-                                [#{data := {scalar, <<"1">>},
+                                [#{data := {scalar, <<"1">>, plain},
                                    tag := <<"tag:yaml.org,2002:str">>},
-                                 #{data := {scalar, <<"2">>},
+                                 #{data := {scalar, <<"2">>, non_plain},
                                    tag := <<"tag:yaml.org,2002:int">>},
-                                 #{data := {scalar, <<"3">>},
+                                 #{data := {scalar, <<"3">>, plain},
                                    tag := <<"tag:example.com:foo">>},
-                                 #{data := {scalar, <<"4">>}}]},
+                                 #{data := {scalar, <<"4">>, plain}}]},
                              tag := <<"tag:yaml.org,2002:set">>}}]},
                  Build(<<"%TAG ! tag:example.com:\n"
                          "---\n"

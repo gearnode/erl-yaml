@@ -28,7 +28,7 @@
           anchor => binary()}.
 
 -type node_data() ::
-        {scalar, yaml:scalar()}
+        {scalar, yaml:scalar(), plain | non_plain}
       | {sequence, [tree_node()]}
       | {mapping, [{tree_node(), tree_node() | undefined}]}.
 
@@ -107,7 +107,11 @@ build_node([#{type := mapping_end} | Events],
 event_node(#{type := Type, data := Data, start := Position}) ->
   NodeData = case Type of
                scalar ->
-                 {scalar, maps:get(value, Data)};
+                 Style = case maps:get(style, Data) of
+                           plain -> plain;
+                           _ -> non_plain
+                         end,
+                 {scalar, maps:get(value, Data), Style};
                sequence_start ->
                  {sequence, []};
                mapping_start ->

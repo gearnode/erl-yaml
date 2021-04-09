@@ -18,7 +18,9 @@
 
 -spec parse(binary(), yaml:parsing_options()) ->
         {ok, [yaml:document()]} | {error, yaml:error_reason()}.
-parse(Data, Options) ->
+parse(Data, Options0) ->
+  DefaultOptions = #{schema => yaml:failsafe_schema()}, % TODO use core schema
+  Options = maps:merge(DefaultOptions, Options0),
   case yaml_events:parse(Data) of
     {ok, Events} ->
       case yaml_ast:build(Events, Options) of
@@ -44,37 +46,47 @@ document_value(#{root := Node}, Options) ->
 -spec node_value(yaml_ast:tree_node(), yaml:parsing_options()) -> yaml:value().
 node_value(Node = #{data := {sequence, Children}}, Options) ->
   Sequence = [node_value(Child, Options) || Child <- Children],
-  decode_value(Sequence, Node, Options);
+  decode_collection(Sequence, Node, Options);
 node_value(Node = #{data := {mapping, Pairs}}, Options) ->
   Mapping = lists:foldl(fun ({KeyNode, ValueNode}, Acc) ->
                             Key = node_value(KeyNode, Options),
                             Value = node_value(ValueNode, Options),
                             Acc#{Key => Value}
                         end, #{}, Pairs),
-  decode_value(Mapping, Node, Options);
-node_value(Node = #{data := {scalar, Data}}, Options) ->
-  decode_value(Data, Node, Options).
+  decode_collection(Mapping, Node, Options);
+node_value(Node = #{data := {scalar, Value, Style}}, Options) ->
+  decode_scalar(Value, Style, Node, Options).
 
--spec decode_value(Value, yaml_ast:tree_node(), yaml:parsing_options()) ->
-        term() when
-    Value :: binary() | yaml:sequence() | yaml:mapping().
-decode_value(Value, #{tag := Tag}, Options) ->
-  Decoder = tag_decoder(Tag, Options),
-  case Decoder(Tag, Value) of
-    {ok, Term} ->
-      Term;
-    {error, Reason} ->
-      throw({error, {invalid_value, Reason, Value}})
-  end;
-decode_value(Value, _, _) ->
+-spec decode_collection(Value, yaml_ast:tree_node(), yaml:parsing_options()) ->
+        yaml:value() when
+    Value :: yaml:sequence() | yaml:mapping().
+decode_collection(Value, #{tag := Tag}, Options) ->
+  decode_tagged_value(Value, Tag, Options);
+decode_collection(Value, _, _) ->
   Value.
 
--spec tag_decoder(yaml:tag(), yaml:parsing_options()) -> yaml:tag_decoder().
-tag_decoder(Tag, Options) ->
-  Schema = maps:get(schema, Options, #{}),
-  case maps:find(Tag, Schema) of
-    {ok, Decoder} ->
-      Decoder;
+-spec decode_scalar(binary(), plain | non_plain, yaml_ast:tree_node(),
+                    yaml:parsing_options()) ->
+        yaml:value().
+decode_scalar(Value, _, #{tag := Tag}, Options) ->
+  decode_tagged_value(Value, Tag, Options);
+decode_scalar(Value, non_plain, _, _) ->
+  Value;
+decode_scalar(Value, plain, _, Options) ->
+  decode_plain_scalar(Value, Options).
+
+-spec decode_tagged_value(Value, yaml:tag(), yaml:parsing_options()) ->
+        yaml:value() when
+    Value :: binary() | yaml:sequence() | yaml:mapping().
+decode_tagged_value(Value, Tag,
+                    #{schema := #{tagged_value_decoder := Decoder}}) ->
+  case Decoder(Tag, Value) of
+    {ok, Value} ->
+      Value;
     error ->
       throw({error, {unknown_tag, Tag}})
   end.
+
+-spec decode_plain_scalar(binary(), yaml:parsing_options()) -> yaml:value().
+decode_plain_scalar(Value, #{schema := #{plain_scalar_decoder := Decoder}}) ->
+  Decoder(Value).
