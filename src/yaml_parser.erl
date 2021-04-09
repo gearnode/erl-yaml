@@ -72,8 +72,9 @@ decode_scalar(Value, _, #{tag := Tag}, Options) ->
   decode_tagged_value(Value, Tag, Options);
 decode_scalar(Value, non_plain, _, _) ->
   Value;
-decode_scalar(Value, plain, _, Options) ->
-  decode_plain_scalar(Value, Options).
+decode_scalar(Value, plain, _,
+              Options = #{schema := #{plain_scalar_identifier := Id}}) ->
+  decode_tagged_value(Value, Id(Value), Options).
 
 -spec decode_tagged_value(Value, yaml:tag(), yaml:parsing_options()) ->
         yaml:value() when
@@ -86,7 +87,3 @@ decode_tagged_value(Value, Tag,
     error ->
       throw({error, {unknown_tag, Tag}})
   end.
-
--spec decode_plain_scalar(binary(), yaml:parsing_options()) -> yaml:value().
-decode_plain_scalar(Value, #{schema := #{plain_scalar_decoder := Decoder}}) ->
-  Decoder(Value).

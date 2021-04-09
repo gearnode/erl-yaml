@@ -23,7 +23,7 @@
               document/0, value/0, scalar/0, sequence/0, mapping/0,
               undecoded_value/0,
               parsing_options/0,
-              schema/0, tagged_value_decoder/0, plain_scalar_decoder/0,
+              schema/0, tagged_value_decoder/0, plain_scalar_identifier/0,
               tag/0, position/0, error_reason/0]).
 
 -type version() :: {non_neg_integer(), non_neg_integer()}.
@@ -41,13 +41,13 @@
 
 -type schema() ::
         #{tagged_value_decoder := tagged_value_decoder(),
-          plain_scalar_decoder := plain_scalar_decoder()}.
+          plain_scalar_identifier := plain_scalar_identifier()}.
 
 -type tagged_value_decoder() ::
         fun((tag(), undecoded_value()) -> {ok, value()} | unknown).
 
--type plain_scalar_decoder() ::
-        fun((binary()) -> value()).
+-type plain_scalar_identifier() ::
+        fun((binary()) -> tag()).
 
 -type tag() :: binary().
 

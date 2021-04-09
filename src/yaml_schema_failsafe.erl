@@ -14,12 +14,12 @@
 
 -module(yaml_schema_failsafe).
 
--export([schema/0]).
+-export([schema/0, decode_tagged_value/2, identify_plain_scalar/1]).
 
 -spec schema() -> yaml:schema().
 schema() ->
   #{tagged_value_decoder => fun decode_tagged_value/2,
-    plain_scalar_decoder => fun decode_plain_scalar/1}.
+    plain_scalar_identifier => fun identify_plain_scalar/1}.
 
 -spec decode_tagged_value(yaml:tag(), yaml:undecoded_value()) ->
         yaml:value() | unknown_tag.
@@ -32,6 +32,6 @@ decode_tagged_value(<<"tag:yaml.org,2002:str">>, Value) ->
 decode_tagged_value(_, _) ->
   error.
 
--spec decode_plain_scalar(binary()) -> yaml:value().
-decode_plain_scalar(Value) ->
-  Value.
+-spec identify_plain_scalar(binary()) -> yaml:tag().
+identify_plain_scalar(_) ->
+  <<"tag:yaml.org,2002:str">>.
