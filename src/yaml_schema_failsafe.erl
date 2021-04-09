@@ -32,6 +32,6 @@ decode_tagged_value(<<"tag:yaml.org,2002:str">>, Value) ->
 decode_tagged_value(_, _) ->
   unknown_tag.
 
--spec identify_plain_scalar(binary()) -> yaml:tag().
-identify_plain_scalar(_) ->
-  <<"tag:yaml.org,2002:str">>.
+-spec identify_plain_scalar(binary()) -> yaml:plain_scalar_identifier_result().
+identify_plain_scalar(Value) ->
+  {value, Value}.

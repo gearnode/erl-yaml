@@ -17,7 +17,7 @@
 -export([libyaml_version/0, libyaml_version_string/0,
          is_version_supported/1,
          parse/1, parse/2,
-         failsafe_schema/0, json_schema/0]).
+         failsafe_schema/0, core_schema/0]).
 
 -export_type([version/0,
               document/0, value/0, scalar/0, sequence/0, mapping/0,
@@ -26,6 +26,7 @@
               schema/0, tagged_value_decoder/0,
               tagged_value_decoding_result/0,
               plain_scalar_identifier/0,
+              plain_scalar_identifier_result/0,
               tag/0, position/0, error_reason/0]).
 
 -type version() :: {non_neg_integer(), non_neg_integer()}.
@@ -52,7 +53,10 @@
         {ok, value()} | {error, term()} | unknown_tag.
 
 -type plain_scalar_identifier() ::
-        fun((binary()) -> tag()).
+        fun((binary()) -> plain_scalar_identifier_result()).
+
+-type plain_scalar_identifier_result() ::
+        {tag, tag()} | {value, value()}.
 
 -type tag() :: binary().
 
@@ -96,6 +100,6 @@ parse(Data, Options) ->
 failsafe_schema() ->
   yaml_schema_failsafe:schema().
 
--spec json_schema() -> schema().
-json_schema() ->
-  yaml_schema_json:schema().
+-spec core_schema() -> schema().
+core_schema() ->
+  yaml_schema_core:schema().

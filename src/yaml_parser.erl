@@ -19,7 +19,7 @@
 -spec parse(binary(), yaml:parsing_options()) ->
         {ok, [yaml:document()]} | {error, yaml:error_reason()}.
 parse(Data, Options0) ->
-  DefaultOptions = #{schema => yaml:failsafe_schema()}, % TODO use core schema
+  DefaultOptions = #{schema => yaml:core_schema()},
   Options = maps:merge(DefaultOptions, Options0),
   case yaml_events:parse(Data) of
     {ok, Events} ->
@@ -74,7 +74,12 @@ decode_scalar(Value, non_plain, _, _) ->
   Value;
 decode_scalar(Value, plain, _,
               Options = #{schema := #{plain_scalar_identifier := Id}}) ->
-  decode_tagged_value(Value, Id(Value), Options).
+  case Id(Value) of
+    {tag, Tag} ->
+      decode_tagged_value(Value, Tag, Options);
+    {value, Term} ->
+      Term
+  end.
 
 -spec decode_tagged_value(Value, yaml:tag(), yaml:parsing_options()) ->
         yaml:value() when
