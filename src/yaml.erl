@@ -15,18 +15,31 @@
 -module(yaml).
 
 -export([libyaml_version/0, libyaml_version_string/0,
-         is_version_supported/1]).
+         is_version_supported/1,
+         parse/1, parse/2]).
 
 -export_type([version/0,
-              value/0, scalar/0, sequence/0, mapping/0,
+              document/0, value/0, scalar/0, sequence/0, mapping/0,
+              parsing_options/0,
+              tag/0, tag_decoder/0,
               position/0, error_reason/0]).
 
 -type version() :: {non_neg_integer(), non_neg_integer()}.
 
+-type document() :: value().
 -type value() :: scalar() | sequence() | mapping().
--type scalar() :: binary(). % TODO
+-type scalar() :: term().
 -type sequence() :: [value()].
 -type mapping() :: #{value() := value()}.
+
+-type parsing_options() ::
+        #{tag_decoders => #{tag() := tag_decoder()}}.
+
+-type tag() :: binary().
+
+-type tag_decoder() ::
+        fun((tag(), binary() | sequence() | mapping()) ->
+               {ok, value()} | {error, term()}).
 
 -type position() :: {Line :: pos_integer(),
                      Column :: pos_integer(),
@@ -37,7 +50,8 @@
       | {syntax_error, binary(), position()}
       | {unsupported_encoding, yaml_events:encoding()}
       | {unsupported_version, version()}
-      | {unknown_alias, binary(), position()}.
+      | {unknown_alias, binary(), position()}
+      | {unknown_tag, tag()}.
 
 -spec libyaml_version() -> {integer(), integer(), integer()}.
 libyaml_version() ->
@@ -52,3 +66,12 @@ is_version_supported({1, _}) ->
   true;
 is_version_supported(_) ->
   false.
+
+-spec parse(binary()) -> {ok, [document()]} | {error, error_reason()}.
+parse(Data) ->
+  parse(Data, #{}).
+
+-spec parse(binary(), parsing_options()) ->
+        {ok, [document()]} | {error, error_reason()}.
+parse(Data, Options) ->
+  yaml_parser:parse(Data, Options).

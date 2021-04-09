@@ -19,7 +19,7 @@
 build_test_() ->
   Build = fun (Data) ->
               {ok, Events} = yaml_events:parse(Data),
-              yaml_ast:build(Events)
+              yaml_ast:build(Events, #{})
           end,
   [?_assertMatch({ok, [#{root :=
                            #{data := {scalar, <<"42">>}}}]},
@@ -69,8 +69,7 @@ build_test_() ->
                                    tag := <<"tag:yaml.org,2002:int">>},
                                  #{data := {scalar, <<"3">>},
                                    tag := <<"tag:example.com:foo">>},
-                                 #{data := {scalar, <<"4">>},
-                                   tag := <<"?">>}]},
+                                 #{data := {scalar, <<"4">>}}]},
                              tag := <<"tag:yaml.org,2002:set">>}}]},
                  Build(<<"%TAG ! tag:example.com:\n"
                          "---\n"

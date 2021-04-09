@@ -14,19 +14,16 @@
 
 -module(yaml_ast).
 
--export([build/1, build/2]).
+-export([build/2]).
 
--export_type([options/0]).
-
--type options() ::
-        #{}.
+-export_type([document/0, tree_node/0, node_data/0]).
 
 -type document() ::
         #{root := tree_node()}.
 
 -type tree_node() ::
         #{data := node_data(),
-          tag := binary(),
+          tag => yaml:tag(),
           position := yaml:position(),
           anchor => binary()}.
 
@@ -36,17 +33,12 @@
       | {mapping, [{tree_node(), tree_node() | undefined}]}.
 
 -type state() ::
-        #{options := options(),
+        #{options := yaml:parsing_options(),
           documents := [document()],
           stack := [tree_node()],
           anchors := #{binary() := tree_node()}}.
 
--spec build([yaml_events:event()]) ->
-        {ok, [document()]} | {error, yaml:error_reason()}.
-build(Events) ->
-  build(Events, #{}).
-
--spec build([yaml_events:event()], options()) ->
+-spec build([yaml_events:event()], yaml:parsing_options()) ->
         {ok, [document()]} | {error, yaml:error_reason()}.
 build(Events, Options) ->
   State = #{options => Options,
@@ -121,15 +113,22 @@ event_node(#{type := Type, data := Data, start := Position}) ->
                mapping_start ->
                  {mapping, []}
              end,
-  Node0 = #{data => NodeData,
-            tag => maps:get(tag, Data, <<"?">>),
-            position => Position},
-  case maps:find(anchor, Data) of
-    {ok, Anchor} ->
-      Node0#{anchor => Anchor};
-    error ->
-      Node0
-  end.
+  Tag = maps:get(tag, Data, undefined),
+  Anchor = maps:get(anchor, Data, undefined),
+  Node = #{data => NodeData, position => Position},
+  set_node_anchor(set_node_tag(Node, Tag), Anchor).
+
+-spec set_node_tag(tree_node(), yaml:tag() | undefined) -> tree_node().
+set_node_tag(Node, undefined) ->
+  Node;
+set_node_tag(Node, Tag) ->
+  Node#{tag => Tag}.
+
+-spec set_node_anchor(tree_node(), binary() | undefined) -> tree_node().
+set_node_anchor(Node, undefined) ->
+  Node;
+set_node_anchor(Node, Anchor) ->
+  Node#{anchor => Anchor}.
 
 -spec push_node(tree_node(), state()) -> state().
 push_node(Node = #{anchor := Anchor},
