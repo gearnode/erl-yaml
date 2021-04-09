@@ -71,8 +71,8 @@ decode_value(Value, _, _) ->
 
 -spec tag_decoder(yaml:tag(), yaml:parsing_options()) -> yaml:tag_decoder().
 tag_decoder(Tag, Options) ->
-  Decoders = maps:get(tag_decoders, Options, #{}),
-  case maps:find(Tag, Decoders) of
+  Schema = maps:get(schema, Options, #{}),
+  case maps:find(Tag, Schema) of
     {ok, Decoder} ->
       Decoder;
     error ->

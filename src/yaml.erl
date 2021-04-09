@@ -21,7 +21,7 @@
 -export_type([version/0,
               document/0, value/0, scalar/0, sequence/0, mapping/0,
               parsing_options/0,
-              tag/0, tag_decoder/0,
+              tag/0, tag_decoder/0, schema/0,
               position/0, error_reason/0]).
 
 -type version() :: {non_neg_integer(), non_neg_integer()}.
@@ -33,13 +33,15 @@
 -type mapping() :: #{value() := value()}.
 
 -type parsing_options() ::
-        #{tag_decoders => #{tag() := tag_decoder()}}.
+        #{schema => schema()}.
 
 -type tag() :: binary().
 
 -type tag_decoder() ::
         fun((tag(), binary() | sequence() | mapping()) ->
                {ok, value()} | {error, term()}).
+
+-type schema() :: #{tag() := tag_decoder()}.
 
 -type position() :: {Line :: pos_integer(),
                      Column :: pos_integer(),
