@@ -16,7 +16,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-parser_test_() ->
+parse_test_() ->
   Parse = fun (Data) ->
               yaml_parser:parse(Data, #{})
           end,

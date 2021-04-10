@@ -14,7 +14,7 @@
 
 -module(yaml_json).
 
--export([parse/1, parse/2, build/1]).
+-export([parse/1, parse/2, decorate_value/2]).
 
 -export_type([value/0, array/0, object/0, key/0]).
 
@@ -29,11 +29,12 @@ parse(Data) ->
 
 -spec parse(binary(), yaml:parsing_options()) ->
         {ok, [value()]} | {error, yaml:error_reason()}.
-parse(Data, Options) ->
+parse(Data, Options0) ->
+  Options = Options0#{value_decorator => fun decorate_value/2},
   case yaml_parser:parse(Data, Options) of
     {ok, DocumentValues} ->
       try
-        {ok, lists:map(fun build_1/1, DocumentValues)}
+        {ok, lists:map(fun build/1, DocumentValues)}
       catch
         throw:{error, Reason} ->
           {error, Reason}
@@ -42,36 +43,43 @@ parse(Data, Options) ->
       {error, Reason}
   end.
 
--spec build(yaml:document()) -> {ok, value()} | {error, yaml:error_reason()}.
+-spec build(yaml:document()) -> value().
 build(Document) ->
-  try
-    {ok, build_1(Document)}
-  catch
-    throw:{error, Reason} ->
-      {error, Reason}
-  end.
-
--spec build_1(yaml:document()) -> value().
-build_1(Document) ->
   build_value(Document).
 
 -spec build_value(yaml:value()) -> value().
-build_value(null) ->
+build_value({null, _}) ->
   null;
-build_value(Value) when is_boolean(Value) ->
+build_value({Value, _}) when is_boolean(Value) ->
   Value;
-build_value(Value) when is_number(Value) ->
+build_value({Value, _}) when is_number(Value) ->
   Value;
-build_value(Value) when is_binary(Value) ->
+build_value({Value, _}) when is_binary(Value) ->
   Value;
-build_value(Value) when is_list(Value) ->
+build_value({Value, _}) when is_list(Value) ->
   lists:map(fun build_value/1, Value);
-build_value(Value) when is_map(Value) ->
+build_value({Value, _}) when is_map(Value) ->
   maps:fold(fun
-              (K, V, Acc) when is_binary(K) ->
+              ({K, _}, {V, _}, Acc) when is_binary(K) ->
                Acc#{K => V};
-              (K, _, _) ->
-               throw({error, {invalid_json_key, K}})
+              (DK = {_, Position}, _, _) ->
+                K = undecorate_value(DK),
+                throw({error, {invalid_json_key, K, Position}})
            end, #{}, Value);
-build_value(Value) ->
-  throw({error, {invalid_json_value, Value}}).
+build_value(DecoratedValue = {_, Position}) ->
+  Value = undecorate_value(DecoratedValue),
+  throw({error, {invalid_json_value, Value, Position}}).
+
+-spec decorate_value(yaml:value(), yaml_ast:tree_node()) -> yaml:value().
+decorate_value(Value, #{position := Position}) ->
+  {Value, Position}.
+
+-spec undecorate_value({yaml:value(), yaml:position()}) -> yaml:value().
+undecorate_value({Values, _}) when is_list(Values) ->
+  lists:map(fun undecorate_value/1, Values);
+undecorate_value({Values, _}) when is_map(Values) ->
+  maps:fold(fun (K, V, Acc) ->
+                Acc#{undecorate_value(K) => undecorate_value(V)}
+            end, #{}, Values);
+undecorate_value({Value, _}) ->
+  Value.

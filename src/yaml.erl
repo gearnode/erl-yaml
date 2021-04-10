@@ -41,7 +41,8 @@
 -type undecoded_value() :: binary() | sequence() | mapping().
 
 -type parsing_options() ::
-        #{schema => schema()}.
+        #{schema => schema(),
+          value_decorator => yaml_parser:value_decorator()}.
 
 -type schema() ::
         #{tagged_value_decoder := tagged_value_decoder(),
@@ -73,8 +74,8 @@
       | {unknown_alias, binary(), position()}
       | {unknown_tag, tag(), position()}
       | {invalid_value, term(), tag(), value(), position()}
-      | {invalid_json_value, term()}
-      | {invalid_json_key, term()}.
+      | {invalid_json_value, term(), position()}
+      | {invalid_json_key, term(), position()}.
 
 -spec libyaml_version() -> {integer(), integer(), integer()}.
 libyaml_version() ->
@@ -121,7 +122,9 @@ format_error_reason({unknown_tag, Tag, {Line, Column, _}}) ->
 format_error_reason({unknown_value, Reason, Tag, Value, {Line, Column, _}}) ->
   io_lib:format("~b:~b: invalid value ~ts for tag ~ts: ~0tp",
                 [Line, Column, Value, Tag, Reason]);
-format_error_reason({invalid_json_value, Value}) ->
-  io_lib:format("~0tp is not a valid json value", [Value]);
-format_error_reason({invalid_json_key, Value}) ->
-  io_lib:format("~0tp is not a valid json object key", [Value]).
+format_error_reason({invalid_json_value, Value, {Line, Column, _}}) ->
+  io_lib:format("~b:~b: ~0tp is not a valid json value",
+                [Line, Column, Value]);
+format_error_reason({invalid_json_key, Value, {Line, Column, _}}) ->
+  io_lib:format("~b:~b: ~0tp is not a valid json object key",
+                [Line, Column, Value]).
