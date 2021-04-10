@@ -64,11 +64,11 @@ build_value({Value, _}) when is_map(Value) ->
                Acc#{K => V};
               (DK = {_, Position}, _, _) ->
                 K = undecorate_value(DK),
-                throw({error, {invalid_json_key, K, Position}})
+                throw({error, yaml:error({invalid_json_key, K}, Position)})
            end, #{}, Value);
 build_value(DecoratedValue = {_, Position}) ->
   Value = undecorate_value(DecoratedValue),
-  throw({error, {invalid_json_value, Value, Position}}).
+  throw({error, yaml:error({invalid_json_value, Value}, Position)}).
 
 -spec decorate_value(yaml:value(), yaml_ast:tree_node()) -> yaml:value().
 decorate_value(Value, #{position := Position}) ->

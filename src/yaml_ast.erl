@@ -83,7 +83,7 @@ build_node([Event = #{type := alias, data := #{anchor := Anchor}} | Events],
       process_node(Events, State#{stack => [TargetNode | Stack]});
     error ->
       Position = maps:get(start, Event),
-      throw({error, {unknown_alias, Anchor, Position}})
+      throw({error, yaml:error({unknown_alias, Anchor}, Position)})
   end;
 build_node([Event = #{type := scalar} | Events], State) ->
   Node = event_node(Event),
@@ -173,7 +173,7 @@ check_stream_encoding(#{type := stream_start, data := Data}) ->
     utf8 ->
       ok;
     Encoding ->
-      throw({error, {unsupported_encoding, Encoding}})
+      throw({error, yaml:error({unsupported_encoding, Encoding})})
   end.
 
 -spec check_document_version(yaml_events:event()) -> ok.
@@ -185,7 +185,7 @@ check_document_version(#{type := document_start, data := Data}) ->
         true ->
           ok;
         false ->
-          throw({error, {unsupported_version, Version}})
+          throw({error, yaml:error({unsupported_version, Version})})
       end;
     error ->
       true

@@ -79,7 +79,9 @@ build_test_() ->
                          "  !foo 3,",
                          "  4"
                          "]">>)),
-   ?_assertEqual({error, {unknown_alias, <<"b">>, {1,8,7}}},
+   ?_assertEqual({error, #{reason => {unknown_alias, <<"b">>},
+                           position => {1,8,7}}},
                  Build(<<"[&a 1, *b]">>)),
-   ?_assertEqual({error, {unknown_alias, <<"a">>, {2,5,14}}},
+   ?_assertEqual({error, #{reason => {unknown_alias, <<"a">>},
+                           position => {2,5,14}}},
                  Build(<<"--- &a 42\n--- *a">>))].

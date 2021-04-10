@@ -102,9 +102,10 @@ decode_tagged_value(Value, #{tag := Tag, position := Position},
     {ok, Term} ->
       Term;
     {error, Reason} ->
-      throw({error, {invalid_value, Reason, Tag, Value, Position}});
+      throw({error, yaml:error({invalid_value, Reason, Tag, Value},
+                               Position)});
     unknown_tag ->
-      throw({error, {unknown_tag, Tag, Position}})
+      throw({error, yaml:error({unknown_tag, Tag}, Position)})
   end.
 
 -spec decorate(yaml:value(), yaml_ast:tree_node(), yaml:parsing_options()) ->

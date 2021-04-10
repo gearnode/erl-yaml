@@ -18,7 +18,8 @@
          is_version_supported/1,
          parse/1, parse/2,
          failsafe_schema/0, core_schema/0,
-         format_error_reason/1]).
+         error/1, error/2,
+         format_error/1, format_error_reason/1]).
 
 -export_type([version/0,
               document/0, value/0, scalar/0, sequence/0, mapping/0,
@@ -66,16 +67,20 @@
                      Column :: pos_integer(),
                      Offset :: non_neg_integer()}.
 
+-type error() ::
+        #{reason := error_reason(),
+          position => position()}.
+
 -type error_reason() ::
         memory_error
-      | {syntax_error, binary(), position()}
+      | {syntax_error, Description :: binary()}
       | {unsupported_encoding, yaml_events:encoding()}
       | {unsupported_version, version()}
-      | {unknown_alias, binary(), position()}
-      | {unknown_tag, tag(), position()}
-      | {invalid_value, term(), tag(), value(), position()}
-      | {invalid_json_value, term(), position()}
-      | {invalid_json_key, term(), position()}.
+      | {unknown_alias, binary()}
+      | {unknown_tag, tag()}
+      | {invalid_value, term(), tag(), value()}
+      | {invalid_json_value, term()}
+      | {invalid_json_key, term()}.
 
 -spec libyaml_version() -> {integer(), integer(), integer()}.
 libyaml_version() ->
@@ -108,23 +113,38 @@ failsafe_schema() ->
 core_schema() ->
   yaml_schema_core:schema().
 
+-spec error(error_reason()) -> error().
+error(Reason) ->
+  #{reason => Reason}.
+
+-spec error(error_reason(), position()) -> error().
+error(Reason, Position) ->
+  #{reason => Reason,
+    position => Position}.
+
+-spec format_error(error()) -> unicode:chardata().
+format_error(#{position := {Line, Column, _}, reason := Reason}) ->
+  io_lib:format("~b:~b: ~ts", [Line, Column, format_error_reason(Reason)]);
+format_error(#{reason := Reason}) ->
+  format_error_reason(Reason).
+
 -spec format_error_reason(error_reason()) -> unicode:chardata().
 format_error_reason(memory_error) ->
   "memory allocation failure";
-format_error_reason({syntax_error, Msg, {Line, Column, _}}) ->
-  io_lib:format("~b:~b: ~ts", [Line, Column, Msg]);
+format_error_reason({syntax_error, Msg}) ->
+  <<"syntax error: ", Msg/binary>>;
 format_error_reason({unsupported_encoding, Encoding}) ->
   io_lib:format("unsupported stream encoding ~ts", [Encoding]);
 format_error_reason({unsupported_version, {Major, Minor}}) ->
   io_lib:format("unsupported document version ~b.~b", [Major, Minor]);
-format_error_reason({unknown_tag, Tag, {Line, Column, _}}) ->
-  io_lib:format("~b:~b: unknown tag ~ts", [Line, Column, Tag]);
-format_error_reason({unknown_value, Reason, Tag, Value, {Line, Column, _}}) ->
-  io_lib:format("~b:~b: invalid value ~ts for tag ~ts: ~0tp",
-                [Line, Column, Value, Tag, Reason]);
-format_error_reason({invalid_json_value, Value, {Line, Column, _}}) ->
-  io_lib:format("~b:~b: ~0tp is not a valid json value",
-                [Line, Column, Value]);
-format_error_reason({invalid_json_key, Value, {Line, Column, _}}) ->
-  io_lib:format("~b:~b: ~0tp is not a valid json object key",
-                [Line, Column, Value]).
+format_error_reason({unknown_tag, Tag}) ->
+  io_lib:format("unknown tag ~ts", [Tag]);
+format_error_reason({unknown_value, Reason, Tag, Value}) ->
+  io_lib:format("invalid value ~ts for tag ~ts: ~0tp",
+                [Value, Tag, Reason]);
+format_error_reason({invalid_json_value, Value}) ->
+  io_lib:format("~0tp is not a valid json value", [Value]);
+format_error_reason({invalid_json_key, Value}) ->
+  io_lib:format("~0tp is not a valid json object key", [Value]);
+format_error_reason(Reason) ->
+  io_lib:format("~0tp", [Reason]).
