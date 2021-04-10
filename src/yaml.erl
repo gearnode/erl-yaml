@@ -32,7 +32,7 @@
 -type version() :: {non_neg_integer(), non_neg_integer()}.
 
 -type document() :: value().
--type value() :: scalar() | sequence() | mapping() | term().
+-type value() :: scalar() | sequence() | mapping().
 -type scalar() :: term().
 -type sequence() :: [value()].
 -type mapping() :: #{value() := value()}.
