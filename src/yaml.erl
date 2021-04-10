@@ -17,7 +17,8 @@
 -export([libyaml_version/0, libyaml_version_string/0,
          is_version_supported/1,
          parse/1, parse/2,
-         failsafe_schema/0, core_schema/0]).
+         failsafe_schema/0, core_schema/0,
+         format_error_reason/1]).
 
 -export_type([version/0,
               document/0, value/0, scalar/0, sequence/0, mapping/0,
@@ -103,3 +104,18 @@ failsafe_schema() ->
 -spec core_schema() -> schema().
 core_schema() ->
   yaml_schema_core:schema().
+
+-spec format_error_reason(error_reason()) -> unicode:chardata().
+format_error_reason(memory_error) ->
+  "memory allocation failure";
+format_error_reason({syntax_error, Msg, {Line, Column, _}}) ->
+  io_lib:format("~b:~b: ~ts", [Line, Column, Msg]);
+format_error_reason({unsupported_encoding, Encoding}) ->
+  io_lib:format("unsupported stream encoding ~ts", [Encoding]);
+format_error_reason({unsupported_version, {Major, Minor}}) ->
+  io_lib:format("unsupported document version ~b.~b", [Major, Minor]);
+format_error_reason({unknown_tag, Tag, {Line, Column, _}}) ->
+  io_lib:format("~b:~b: unknown tag ~ts", [Line, Column, Tag]);
+format_error_reason({unknown_value, Reason, Tag, Value, {Line, Column, _}}) ->
+  io_lib:format("~b:~b: invalid value ~ts for tag ~ts: ~0tp",
+                [Line, Column, Value, Tag, Reason]).
