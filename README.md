@@ -2,7 +2,12 @@
 This repository contains an implementation of the [YAML](https://yaml.org)
 data format in Erlang.
 
-Low-level parsing is based on [libyaml](https://github.com/yaml/libyaml).
+Low-level parsing is based on [libyaml](https://github.com/yaml/libyaml) and
+uses a [NIF](https://erlang.org/doc/man/erl_nif.html). Care has been taken to
+split parsing in multiple calls using
+[`enif_schedule_nif`](https://erlang.org/doc/man/erl_nif.html#enif_schedule_nif)
+and
+[`enif_consume_timeslice`](https://erlang.org/doc/man/erl_nif.html#enif_consume_timeslice).
 
 # Documentation
 A handbook is available [in the `doc`
