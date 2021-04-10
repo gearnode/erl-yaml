@@ -81,10 +81,11 @@ parser_test_() ->
                  Parse(<<"[&a 42, *a]">>)),
    ?_assertEqual({ok, [#{<<"a">> => <<"b">>, <<"b">> => <<"a">>}]},
                  Parse(<<"{&a a: &b b, *b: *a}">>)),
+   ?_assertEqual({ok, [[[1, [2]], [1, [2]], [2]]]},
+                 Parse(<<"[&a [1, &b [2]], *a, *b]">>)),
    ?_assertEqual({error, {unknown_alias, <<"a">>, {1,2,1}}},
                  Parse(<<"[*a, &a 42]">>)),
    ?_assertEqual({error, {unknown_alias, <<"b">>, {1,9,8}}},
                  Parse(<<"[&a 42, *b]">>)),
    ?_assertEqual({error, {unknown_alias, <<"a">>, {4,1,14}}},
-                 Parse(<<"---\n&a 42\n---\n*a">>))
-].
+                 Parse(<<"---\n&a 42\n---\n*a">>))].

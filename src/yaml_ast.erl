@@ -135,10 +135,6 @@ set_node_anchor(Node, Anchor) ->
   Node#{anchor => Anchor}.
 
 -spec push_node(tree_node(), state()) -> state().
-push_node(Node = #{anchor := Anchor},
-          State = #{stack := Stack, anchors := Anchors}) ->
-  State#{stack => [Node | Stack],
-         anchors => Anchors#{Anchor => Node}};
 push_node(Node, State = #{stack := Stack}) ->
   State#{stack => [Node | Stack]}.
 
@@ -147,7 +143,15 @@ push_node(Node, State = #{stack := Stack}) ->
 process_node(Events, State = #{stack := [Node]}) ->
   {Node, Events, State#{stack => []}};
 process_node(Events, State = #{stack := [Node | Nodes]}) ->
-  build_node(Events, State#{stack => merge_node(Node, Nodes)}).
+  State2 = maybe_update_anchors(Node, State),
+  build_node(Events, State2#{stack => merge_node(Node, Nodes)}).
+
+-spec maybe_update_anchors(tree_node(), state()) -> state().
+maybe_update_anchors(Node = #{anchor := Anchor},
+                     State = #{anchors := Anchors}) ->
+  State#{anchors => Anchors#{Anchor => Node}};
+maybe_update_anchors(_Node, State) ->
+  State.
 
 -spec merge_node(tree_node(), [tree_node()]) -> [tree_node()].
 merge_node(Node, [Parent = #{data := {sequence, Children}} | Nodes]) ->
