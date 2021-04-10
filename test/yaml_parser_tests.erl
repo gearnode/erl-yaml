@@ -88,4 +88,8 @@ parser_test_() ->
    ?_assertEqual({error, {unknown_alias, <<"b">>, {1,9,8}}},
                  Parse(<<"[&a 42, *b]">>)),
    ?_assertEqual({error, {unknown_alias, <<"a">>, {4,1,14}}},
-                 Parse(<<"---\n&a 42\n---\n*a">>))].
+                 Parse(<<"---\n&a 42\n---\n*a">>)),
+   ?_assertEqual({error, {unknown_alias, <<"a">>, {1,5,4}}},
+                 Parse(<<"&a [*a]">>)),
+   ?_assertEqual({error, {unknown_alias, <<"a">>, {1,9,8}}},
+                 Parse(<<"&a [&b [*a]]">>))].
