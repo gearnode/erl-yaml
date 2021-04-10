@@ -239,20 +239,23 @@ eyaml_mark_to_term(ErlNifEnv *env, const yaml_mark_t *mark) {
 ERL_NIF_TERM
 eyaml_event_to_term(ErlNifEnv *env, const yaml_event_t *event) {
         ERL_NIF_TERM event_term, data_term, key_terms[3], value_terms[3];
+        struct eyaml_nif_data *nif_data;
 
-        key_terms[0] = enif_make_atom(env, "type");
+        nif_data = enif_priv_data(env);
+
+        key_terms[0] = nif_data->atom_type;
         value_terms[0] = eyaml_event_type_to_term(env, event->type);
 
-        key_terms[1] = enif_make_atom(env, "start");
+        key_terms[1] = nif_data->atom_start;
         value_terms[1] = eyaml_mark_to_term(env, &event->start_mark);
 
-        key_terms[2] = enif_make_atom(env, "end");
+        key_terms[2] = nif_data->atom_end;
         value_terms[2] = eyaml_mark_to_term(env, &event->end_mark);
 
         enif_make_map_from_arrays(env, key_terms, value_terms, 3, &event_term);
 
         if (eyaml_event_data_to_term(env, event, &data_term) == true) {
-                eyaml_map_put(env, enif_make_atom(env, "data"), data_term,
+                eyaml_map_put(env, nif_data->atom_data, data_term,
                               &event_term);
         }
 
@@ -261,46 +264,38 @@ eyaml_event_to_term(ErlNifEnv *env, const yaml_event_t *event) {
 
 ERL_NIF_TERM
 eyaml_event_type_to_term(ErlNifEnv *env, yaml_event_type_t type) {
-        const char *name;
+        struct eyaml_nif_data *nif_data;
+
+        nif_data = enif_priv_data(env);
 
         switch (type) {
         case YAML_STREAM_START_EVENT:
-                name = "stream_start";
-                break;
+                return nif_data->atom_stream_start;
         case YAML_STREAM_END_EVENT:
-                name = "stream_end";
-                break;
+                return nif_data->atom_stream_end;
         case YAML_DOCUMENT_START_EVENT:
-                name = "document_start";
-                break;
+                return nif_data->atom_document_start;
         case YAML_DOCUMENT_END_EVENT:
-                name = "document_end";
-                break;
+                return nif_data->atom_document_end;
         case YAML_ALIAS_EVENT:
-                name = "alias";
-                break;
+                return nif_data->atom_alias;
         case YAML_SCALAR_EVENT:
-                name = "scalar";
-                break;
+                return nif_data->atom_scalar;
         case YAML_SEQUENCE_START_EVENT:
-                name = "sequence_start";
-                break;
+                return nif_data->atom_sequence_start;
         case YAML_SEQUENCE_END_EVENT:
-                name = "sequence_end";
-                break;
+                return nif_data->atom_sequence_end;
         case YAML_MAPPING_START_EVENT:
-                name = "mapping_start";
-                break;
+                return nif_data->atom_mapping_start;
         case YAML_MAPPING_END_EVENT:
-                name = "mapping_end";
-                break;
-
-        default:
-                return enif_make_tuple2(env, enif_make_atom(env, "unknown"),
+                return nif_data->atom_mapping_end;
+        case YAML_NO_EVENT:
+                return enif_make_tuple2(env, nif_data->atom_unknown,
                                         enif_make_uint(env, type));
         }
 
-        return enif_make_atom(env, name);
+        return enif_make_tuple2(env, nif_data->atom_unknown,
+                                enif_make_uint(env, type));
 }
 
 bool
@@ -423,9 +418,12 @@ eyaml_document_end_to_term(ErlNifEnv *env, const yaml_event_t *event) {
 
 ERL_NIF_TERM
 eyaml_alias_to_term(ErlNifEnv *env, const yaml_event_t *event) {
+        struct eyaml_nif_data *nif_data;
         ERL_NIF_TERM map_term, key_term, value_term;
 
-        key_term = enif_make_atom(env, "anchor");
+        nif_data = enif_priv_data(env);
+
+        key_term = nif_data->atom_anchor;
         value_term = eyaml_binary_ustring(env, event->data.alias.anchor);
 
         enif_make_map_from_arrays(env, &key_term, &value_term, 1, &map_term);
@@ -435,6 +433,7 @@ eyaml_alias_to_term(ErlNifEnv *env, const yaml_event_t *event) {
 
 ERL_NIF_TERM
 eyaml_scalar_to_term(ErlNifEnv *env, const yaml_event_t *event) {
+        struct eyaml_nif_data *nif_data;
         ERL_NIF_TERM map_term, key_terms[5], value_terms[5];
         ERL_NIF_TERM key_term, value_term;
         const unsigned char *value, *anchor, *tag;
@@ -442,32 +441,34 @@ eyaml_scalar_to_term(ErlNifEnv *env, const yaml_event_t *event) {
         bool plain_implicit, quoted_implicit;
         yaml_scalar_style_t style;
 
+        nif_data = enif_priv_data(env);
+
         value = event->data.scalar.value;
         length = event->data.scalar.length;
         plain_implicit = event->data.scalar.plain_implicit;
         quoted_implicit = event->data.scalar.quoted_implicit;
         style = event->data.scalar.style;
 
-        key_terms[0] = enif_make_atom(env, "value");
+        key_terms[0] = nif_data->atom_value;
         value_terms[0] = eyaml_binary_ustring(env, value);
 
-        key_terms[1] = enif_make_atom(env, "length");
+        key_terms[1] = nif_data->atom_length;
         value_terms[1] = enif_make_ulong(env, length);
 
-        key_terms[2] = enif_make_atom(env, "plain_implicit");
+        key_terms[2] = nif_data->atom_plain_implicit;
         value_terms[2] = eyaml_boolean(env, plain_implicit);
 
-        key_terms[3] = enif_make_atom(env, "quoted_implicit");
+        key_terms[3] = nif_data->atom_quoted_implicit;
         value_terms[3] = eyaml_boolean(env, quoted_implicit);
 
-        key_terms[4] = enif_make_atom(env, "style");
+        key_terms[4] = nif_data->atom_style;
         value_terms[4] = eyaml_scalar_style_to_term(env, style);
 
         enif_make_map_from_arrays(env, key_terms, value_terms, 5, &map_term);
 
         anchor = event->data.scalar.anchor;
         if (anchor) {
-                key_term = enif_make_atom(env, "anchor");
+                key_term = nif_data->atom_anchor;
                 value_term = eyaml_binary_ustring(env, anchor);
 
                 eyaml_map_put(env, key_term, value_term, &map_term);
@@ -475,7 +476,7 @@ eyaml_scalar_to_term(ErlNifEnv *env, const yaml_event_t *event) {
 
         tag = event->data.scalar.tag;
         if (tag) {
-                key_term = enif_make_atom(env, "tag");
+                key_term = nif_data->atom_tag;
                 value_term = eyaml_binary_ustring(env, tag);
 
                 eyaml_map_put(env, key_term, value_term, &map_term);
@@ -486,26 +487,29 @@ eyaml_scalar_to_term(ErlNifEnv *env, const yaml_event_t *event) {
 
 ERL_NIF_TERM
 eyaml_sequence_start_to_term(ErlNifEnv *env, const yaml_event_t *event) {
+        struct eyaml_nif_data *nif_data;
         ERL_NIF_TERM map_term, key_terms[2], value_terms[2];
         ERL_NIF_TERM key_term, value_term;
         bool implicit;
         const unsigned char *anchor, *tag;
         yaml_sequence_style_t style;
 
+        nif_data = enif_priv_data(env);
+
         implicit = (event->data.document_start.implicit != 0);
         style = event->data.sequence_start.style;
 
-        key_terms[0] = enif_make_atom(env, "implicit");
+        key_terms[0] = nif_data->atom_implicit;
         value_terms[0] = eyaml_boolean(env, implicit);
 
-        key_terms[1] = enif_make_atom(env, "style");
+        key_terms[1] = nif_data->atom_style;
         value_terms[1] = eyaml_sequence_style_to_term(env, style);
 
         enif_make_map_from_arrays(env, key_terms, value_terms, 2, &map_term);
 
         anchor = event->data.sequence_start.anchor;
         if (anchor) {
-                key_term = enif_make_atom(env, "anchor");
+                key_term = nif_data->atom_anchor;
                 value_term = eyaml_binary_ustring(env, anchor);
 
                 eyaml_map_put(env, key_term, value_term, &map_term);
@@ -513,7 +517,7 @@ eyaml_sequence_start_to_term(ErlNifEnv *env, const yaml_event_t *event) {
 
         tag = event->data.sequence_start.tag;
         if (tag) {
-                key_term = enif_make_atom(env, "tag");
+                key_term = nif_data->atom_tag;
                 value_term = eyaml_binary_ustring(env, tag);
 
                 eyaml_map_put(env, key_term, value_term, &map_term);
@@ -524,26 +528,29 @@ eyaml_sequence_start_to_term(ErlNifEnv *env, const yaml_event_t *event) {
 
 ERL_NIF_TERM
 eyaml_mapping_start_to_term(ErlNifEnv *env, const yaml_event_t *event) {
+        struct eyaml_nif_data *nif_data;
         ERL_NIF_TERM map_term, key_terms[2], value_terms[2];
         ERL_NIF_TERM key_term, value_term;
         bool implicit;
         const unsigned char *anchor, *tag;
         yaml_mapping_style_t style;
 
+        nif_data = enif_priv_data(env);
+
         implicit = (event->data.document_start.implicit != 0);
         style = event->data.mapping_start.style;
 
-        key_terms[0] = enif_make_atom(env, "implicit");
+        key_terms[0] = nif_data->atom_implicit;
         value_terms[0] = eyaml_boolean(env, implicit);
 
-        key_terms[1] = enif_make_atom(env, "style");
+        key_terms[1] = nif_data->atom_style;
         value_terms[1] = eyaml_mapping_style_to_term(env, style);
 
         enif_make_map_from_arrays(env, key_terms, value_terms, 2, &map_term);
 
         anchor = event->data.mapping_start.anchor;
         if (anchor) {
-                key_term = enif_make_atom(env, "anchor");
+                key_term = nif_data->atom_anchor;
                 value_term = eyaml_binary_ustring(env, anchor);
 
                 eyaml_map_put(env, key_term, value_term, &map_term);
@@ -551,7 +558,7 @@ eyaml_mapping_start_to_term(ErlNifEnv *env, const yaml_event_t *event) {
 
         tag = event->data.mapping_start.tag;
         if (tag) {
-                key_term = enif_make_atom(env, "tag");
+                key_term = nif_data->atom_tag;
                 value_term = eyaml_binary_ustring(env, tag);
 
                 eyaml_map_put(env, key_term, value_term, &map_term);
@@ -562,7 +569,10 @@ eyaml_mapping_start_to_term(ErlNifEnv *env, const yaml_event_t *event) {
 
 ERL_NIF_TERM
 eyaml_encoding_to_term(ErlNifEnv *env, yaml_encoding_t encoding) {
+        struct eyaml_nif_data *nif_data;
         const char *name;
+
+        nif_data = enif_priv_data(env);
 
         switch (encoding) {
         case YAML_ANY_ENCODING:
@@ -579,7 +589,7 @@ eyaml_encoding_to_term(ErlNifEnv *env, yaml_encoding_t encoding) {
                 break;
 
         default:
-                return enif_make_tuple2(env, enif_make_atom(env, "unknown"),
+                return enif_make_tuple2(env, nif_data->atom_unknown,
                                         enif_make_uint(env, encoding));
         }
 
@@ -620,78 +630,63 @@ eyaml_tag_directive_to_term(ErlNifEnv *env, const yaml_tag_directive_t *tag) {
 
 ERL_NIF_TERM
 eyaml_sequence_style_to_term(ErlNifEnv *env, yaml_sequence_style_t style) {
-        const char *name;
+        struct eyaml_nif_data *nif_data;
+
+        nif_data = enif_priv_data(env);
 
         switch (style) {
         case YAML_ANY_SEQUENCE_STYLE:
-                name = "any";
-                break;
+                return nif_data->atom_any;
         case YAML_BLOCK_SEQUENCE_STYLE:
-                name = "block";
-                break;
+                return nif_data->atom_block;
         case YAML_FLOW_SEQUENCE_STYLE:
-                name = "flow";
-                break;
-
-        default:
-                return enif_make_tuple2(env, enif_make_atom(env, "unknown"),
-                                        enif_make_uint(env, style));
+                return nif_data->atom_flow;
         }
 
-        return enif_make_atom(env, name);
+        return enif_make_tuple2(env, nif_data->atom_unknown,
+                                enif_make_uint(env, style));
 }
 
 ERL_NIF_TERM
 eyaml_mapping_style_to_term(ErlNifEnv *env, yaml_mapping_style_t style) {
-        const char *name;
+        struct eyaml_nif_data *nif_data;
+
+        nif_data = enif_priv_data(env);
 
         switch (style) {
         case YAML_ANY_MAPPING_STYLE:
-                name = "any";
-                break;
+                return nif_data->atom_any;
         case YAML_BLOCK_MAPPING_STYLE:
-                name = "block";
-                break;
+                return nif_data->atom_block;
         case YAML_FLOW_MAPPING_STYLE:
-                name = "flow";
-                break;
-
-        default:
-                return enif_make_tuple2(env, enif_make_atom(env, "unknown"),
-                                        enif_make_uint(env, style));
+                return nif_data->atom_flow;
         }
 
-        return enif_make_atom(env, name);
+        return enif_make_tuple2(env, nif_data->atom_unknown,
+                                enif_make_uint(env, style));
 }
 
 ERL_NIF_TERM
 eyaml_scalar_style_to_term(ErlNifEnv *env, yaml_scalar_style_t style) {
-        const char *name;
+        struct eyaml_nif_data *nif_data;
+
+        nif_data = enif_priv_data(env);
 
         switch (style) {
         case YAML_ANY_SCALAR_STYLE:
-                name = "any";
-                break;
+                return nif_data->atom_any;
         case YAML_PLAIN_SCALAR_STYLE:
-                name = "plain";
-                break;
+                return nif_data->atom_plain;
         case YAML_SINGLE_QUOTED_SCALAR_STYLE:
-                name = "single_quoted";
-                break;
+                return nif_data->atom_single_quoted;
         case YAML_DOUBLE_QUOTED_SCALAR_STYLE:
-                name = "double_quoted";
-                break;
+                return nif_data->atom_double_quoted;
         case YAML_LITERAL_SCALAR_STYLE:
-                name = "literal";
-                break;
+                return nif_data->atom_literal;
         case YAML_FOLDED_SCALAR_STYLE:
-                name = "folded";
-                break;
-
-        default:
-                return enif_make_tuple2(env, enif_make_atom(env, "unknown"),
-                                        enif_make_uint(env, style));
+                return nif_data->atom_folded;
         }
 
-        return enif_make_atom(env, name);
+        return enif_make_tuple2(env, nif_data->atom_unknown,
+                                enif_make_uint(env, style));
 }

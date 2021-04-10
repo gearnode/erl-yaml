@@ -24,6 +24,38 @@
 
 struct eyaml_nif_data {
         ErlNifResourceType *parser_resource_type;
+
+        ERL_NIF_TERM atom_alias;
+        ERL_NIF_TERM atom_anchor;
+        ERL_NIF_TERM atom_any;
+        ERL_NIF_TERM atom_block;
+        ERL_NIF_TERM atom_data;
+        ERL_NIF_TERM atom_document_end;
+        ERL_NIF_TERM atom_document_start;
+        ERL_NIF_TERM atom_double_quoted;
+        ERL_NIF_TERM atom_end;
+        ERL_NIF_TERM atom_flow;
+        ERL_NIF_TERM atom_folded;
+        ERL_NIF_TERM atom_implicit;
+        ERL_NIF_TERM atom_length;
+        ERL_NIF_TERM atom_literal;
+        ERL_NIF_TERM atom_mapping_end;
+        ERL_NIF_TERM atom_mapping_start;
+        ERL_NIF_TERM atom_plain;
+        ERL_NIF_TERM atom_plain_implicit;
+        ERL_NIF_TERM atom_quoted_implicit;
+        ERL_NIF_TERM atom_scalar;
+        ERL_NIF_TERM atom_sequence_end;
+        ERL_NIF_TERM atom_sequence_start;
+        ERL_NIF_TERM atom_single_quoted;
+        ERL_NIF_TERM atom_start;
+        ERL_NIF_TERM atom_stream_end;
+        ERL_NIF_TERM atom_stream_start;
+        ERL_NIF_TERM atom_style;
+        ERL_NIF_TERM atom_tag;
+        ERL_NIF_TERM atom_type;
+        ERL_NIF_TERM atom_unknown;
+        ERL_NIF_TERM atom_value;
 };
 
 void eyaml_nif_data_dtor(ErlNifEnv *, void *);
