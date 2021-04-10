@@ -20,7 +20,8 @@ parser_test_() ->
   Parse = fun (Data) ->
               yaml_parser:parse(Data, #{})
           end,
-  [?_assertEqual({ok, []},
+  [%% Values
+   ?_assertEqual({ok, []},
                  Parse(<<"">>)),
    ?_assertEqual({ok, [<<"">>]},
                  Parse(<<"---">>)),
@@ -52,6 +53,7 @@ parser_test_() ->
    ?_assertEqual({ok, [[negative_infinity, negative_infinity,
                         negative_infinity]]},
                  Parse(<<"[-.inf, -.Inf, -.INF]">>)),
+   %% Tags
    ?_assertEqual({ok, [[]]},
                  Parse(<<"!!seq []">>)),
    ?_assertEqual({error, {invalid_value, invalid_sequence,
@@ -71,4 +73,18 @@ parser_test_() ->
                  Parse(<<"!!str 42">>)),
    ?_assertEqual({error, {invalid_value, invalid_string,
                           <<"tag:yaml.org,2002:str">>, [], {1,1,0}}},
-                 Parse(<<"!!str []">>))].
+                 Parse(<<"!!str []">>)),
+   %% Anchors and aliases
+   ?_assertEqual({ok, [42]},
+                 Parse(<<"&a 42">>)),
+   ?_assertEqual({ok, [[42, 42]]},
+                 Parse(<<"[&a 42, *a]">>)),
+   ?_assertEqual({ok, [#{<<"a">> => <<"b">>, <<"b">> => <<"a">>}]},
+                 Parse(<<"{&a a: &b b, *b: *a}">>)),
+   ?_assertEqual({error, {unknown_alias, <<"a">>, {1,2,1}}},
+                 Parse(<<"[*a, &a 42]">>)),
+   ?_assertEqual({error, {unknown_alias, <<"b">>, {1,9,8}}},
+                 Parse(<<"[&a 42, *b]">>)),
+   ?_assertEqual({error, {unknown_alias, <<"a">>, {4,1,14}}},
+                 Parse(<<"---\n&a 42\n---\n*a">>))
+].
