@@ -72,7 +72,9 @@
       | {unsupported_version, version()}
       | {unknown_alias, binary(), position()}
       | {unknown_tag, tag(), position()}
-      | {invalid_value, term(), tag(), value(), position()}.
+      | {invalid_value, term(), tag(), value(), position()}
+      | {invalid_json_value, term()}
+      | {invalid_json_key, term()}.
 
 -spec libyaml_version() -> {integer(), integer(), integer()}.
 libyaml_version() ->
@@ -118,4 +120,8 @@ format_error_reason({unknown_tag, Tag, {Line, Column, _}}) ->
   io_lib:format("~b:~b: unknown tag ~ts", [Line, Column, Tag]);
 format_error_reason({unknown_value, Reason, Tag, Value, {Line, Column, _}}) ->
   io_lib:format("~b:~b: invalid value ~ts for tag ~ts: ~0tp",
-                [Line, Column, Value, Tag, Reason]).
+                [Line, Column, Value, Tag, Reason]);
+format_error_reason({invalid_json_value, Value}) ->
+  io_lib:format("~0tp is not a valid json value", [Value]);
+format_error_reason({invalid_json_key, Value}) ->
+  io_lib:format("~0tp is not a valid json object key", [Value]).
