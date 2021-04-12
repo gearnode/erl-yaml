@@ -40,4 +40,10 @@ parse_test_() ->
                  Parse(<<"{1: 2}">>)),
    ?_assertEqual({error, #{reason => {invalid_json_key, [1, 2]},
                            position => {1,2,1}}},
-                 Parse(<<"{[1, 2]: 3}">>))].
+                 Parse(<<"{[1, 2]: 3}">>)),
+   ?_assertEqual({error, #{reason => {invalid_json_key, [1, 2]},
+                           position => {1,3,2}}},
+                 Parse(<<"[{[1, 2]: 3}]">>)),
+   ?_assertEqual({error, #{reason => {invalid_json_key, []},
+                           position => {1,7,6}}},
+                 Parse(<<"[{a: {[]: 3}}]">>))].

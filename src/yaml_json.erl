@@ -60,8 +60,8 @@ build_value({Value, _}) when is_list(Value) ->
   lists:map(fun build_value/1, Value);
 build_value({Value, _}) when is_map(Value) ->
   maps:fold(fun
-              ({K, _}, {V, _}, Acc) when is_binary(K) ->
-               Acc#{K => V};
+              ({K, _}, DV, Acc) when is_binary(K) ->
+                Acc#{K => build_value(DV)};
               (DK = {_, Position}, _, _) ->
                 K = undecorate_value(DK),
                 throw({error, yaml:error({invalid_json_key, K}, Position)})
