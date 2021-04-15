@@ -19,12 +19,12 @@
 -on_load(init/0).
 
 init() ->
-  Path = filename:join(find_nif_directory(), "yaml_nif"),
+  Path = filename:join(find_nif_directory(yaml), "yaml_nif"),
   erlang:load_nif(Path, []).
 
--spec find_nif_directory() -> string().
-find_nif_directory() ->
-  PrivDir = code:priv_dir(yaml),
+-spec find_nif_directory(AppName :: atom()) -> string().
+find_nif_directory(AppName) ->
+  PrivDir = code:priv_dir(AppName),
   case filelib:is_dir(PrivDir) of
     true ->
       %% If the private directory exists, we are in a release and the library
@@ -32,29 +32,32 @@ find_nif_directory() ->
       PrivDir;
     false ->
       %% If the private directory does not exists, we (probably) are in an
-      %% escript. In that case, code:lib_dir/1 will return <app>/yaml where
-      %% <app> is the name of the escript (no it does not make any sense since
-      %% it is a file and not a directory, but there is nothing I can do about
-      %% it).
-      %%
-      %% In that situation, we will arbitrarily look for the library in the
-      %% directory of the escript file.
-      LibDir = code:lib_dir(yaml),
-      case filename:split(LibDir) of
-        Parts when length(Parts) > 2 ->
-          AppDir = filename:join(lists:droplast(lists:droplast(Parts))),
-          case filelib:is_dir(AppDir) of
-            true ->
-              AppDir;
-            false ->
-              %% If we end up here, then the yaml module was packaged in a way
-              %% we do not recognize. Contact me.
-              error({directory_not_found, AppDir})
-          end;
-        _ ->
-          %% Same thing here
-          error({invalid_lib_dir, LibDir})
-      end
+      %% escript.
+      filename:join(escript_directory(AppName), "lib")
+  end.
+
+-spec escript_directory(AppName :: atom()) -> string().
+escript_directory(AppName) ->
+  %% When the application is packaged into an escript, code:lib_dir/1 returns
+  %% <app>/yaml where <app> is the name of the escript (no it does not make
+  %% any sense since it is a file and not a directory, but there is nothing I
+  %% can do about it). Given this path, we can obtain the directory containing
+  %% the escript itself.
+  %%
+  %% There is no standard way to package an escript, so we will assume that it
+  %% is part of a "bin" directory, and that NIF shared libraries are stored in
+  %% a "lib" directory which exists at the same level than the "bin"
+  %% directory.
+  %%
+  %% This happens to match the way rebar3 organize the _build directory.
+  LibDir = code:lib_dir(AppName),
+  case lists:reverse(filename:split(LibDir)) of
+    [_ | [_ | [_ | Parts]]] ->
+      filename:join(lists:reverse(Parts));
+    _ ->
+      %% If we end up here, then the yaml module was packaged in a different
+      %% way. Nothing else we can do.
+      error({invalid_lib_dir, LibDir})
   end.
 
 -spec get_version() -> {integer(), integer(), integer()}.
