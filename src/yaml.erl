@@ -29,7 +29,7 @@
               tagged_value_decoding_result/0,
               plain_scalar_identifier/0,
               plain_scalar_identifier_result/0,
-              tag/0, position/0, error_reason/0]).
+              tag/0, position/0, error/0, error_reason/0]).
 
 -type version() :: {non_neg_integer(), non_neg_integer()}.
 
