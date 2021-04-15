@@ -19,9 +19,43 @@
 -on_load(init/0).
 
 init() ->
+  Path = filename:join(find_nif_directory(), "yaml_nif"),
+  erlang:load_nif(Path, []).
+
+-spec find_nif_directory() -> string().
+find_nif_directory() ->
   PrivDir = code:priv_dir(yaml),
-  LibPath = filename:join([PrivDir, "yaml_nif"]),
-  erlang:load_nif(LibPath, []).
+  case filelib:is_dir(PrivDir) of
+    true ->
+      %% If the private directory exists, we are in a release and the library
+      %% is directly there.
+      PrivDir;
+    false ->
+      %% If the private directory does not exists, we (probably) are in an
+      %% escript. In that case, code:lib_dir/1 will return <app>/yaml where
+      %% <app> is the name of the escript (no it does not make any sense since
+      %% it is a file and not a directory, but there is nothing I can do about
+      %% it).
+      %%
+      %% In that situation, we will arbitrarily look for the library in the
+      %% directory of the escript file.
+      LibDir = code:lib_dir(yaml),
+      case filename:split(LibDir) of
+        Parts when length(Parts) > 2 ->
+          AppDir = filename:join(lists:droplast(lists:droplast(Parts))),
+          case filelib:is_dir(AppDir) of
+            true ->
+              AppDir;
+            false ->
+              %% If we end up here, then the yaml module was packaged in a way
+              %% we do not recognize. Contact me.
+              error({directory_not_found, AppDir})
+          end;
+        _ ->
+          %% Same thing here
+          error({invalid_lib_dir, LibDir})
+      end
+  end.
 
 -spec get_version() -> {integer(), integer(), integer()}.
 get_version() ->
