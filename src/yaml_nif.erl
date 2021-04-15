@@ -33,7 +33,8 @@ find_nif_directory(AppName) ->
     false ->
       %% If the private directory does not exists, we (probably) are in an
       %% escript.
-      filename:join(escript_directory(AppName), "lib")
+      Root = escript_directory(AppName),
+      filename:join([Root, "lib", AppName, "priv"])
   end.
 
 -spec escript_directory(AppName :: atom()) -> string().
@@ -46,8 +47,7 @@ escript_directory(AppName) ->
   %%
   %% There is no standard way to package an escript, so we will assume that it
   %% is part of a "bin" directory, and that NIF shared libraries are stored in
-  %% a "lib" directory which exists at the same level than the "bin"
-  %% directory.
+  %% a lib/<app>/priv directory.
   %%
   %% This happens to match the way rebar3 organize the _build directory.
   LibDir = code:lib_dir(AppName),
