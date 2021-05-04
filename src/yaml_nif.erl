@@ -47,7 +47,7 @@ escript_directory(AppName) ->
   %%
   %% There is no standard way to package an escript, so we will assume that it
   %% is part of a "bin" directory, and that NIF shared libraries are stored in
-  %% a lib/<app>/priv directory.
+  %% a lib/yaml/priv directory.
   %%
   %% This happens to match the way rebar3 organize the _build directory.
   LibDir = code:lib_dir(AppName),
