@@ -20,12 +20,7 @@
 
 init() ->
   Path = filename:join(find_nif_directory(yaml), "yaml_nif"),
-  case erlang:load_nif(Path, []) of
-    ok ->
-      ok;
-    {error, Reason} ->
-      error({load_nif_error, Reason, Path})
-  end.
+  erlang:load_nif(Path, []).
 
 -spec find_nif_directory(AppName :: atom()) -> string().
 find_nif_directory(AppName) ->
