@@ -27,7 +27,7 @@ ifeq ($(PLATFORM), FreeBSD)
 	CFLAGS += -I/usr/local/include
 	CFLAGS += -I/usr/local/lib/erlang/usr/include
 
-	LDFLAGS += -I/usr/local/lib
+	LDFLAGS += -L/usr/local/lib
 	LDFLAGS += -L/usr/local/lib/erlang/usr/lib
 endif
 
