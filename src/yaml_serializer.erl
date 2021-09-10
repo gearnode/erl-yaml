@@ -59,7 +59,15 @@ process_value(Mapping, Emitter, Options) when is_map(Mapping) ->
                 style => block},
   Emitter2 = emit(Emitter, mapping_start, StartData),
   Emitter3 = maps:fold(fun (Key, Value, E) ->
-                           E2 = process_value(Key, E, Options),
+                           E2 = if
+                                  is_binary(Key) ->
+                                    emit_scalar(Emitter, Key, plain);
+                                  is_atom(Key) ->
+                                    emit_scalar(Emitter, atom_to_binary(Key),
+                                                plain);
+                                  true ->
+                                    process_value(Key, E, Options)
+                                end,
                            process_value(Value, E2, Options)
                        end, Emitter2, Mapping),
   emit(Emitter3, mapping_end);
@@ -76,8 +84,8 @@ process_value(Scalar, Emitter, _Options) when is_binary(Scalar) ->
     nomatch ->
       emit_scalar(Emitter, Scalar, double_quoted)
   end;
-process_value(Scalar, Emitter, _Options) when is_atom(Scalar) ->
-  emit_scalar(Emitter, atom_to_binary(Scalar), double_quoted);
+process_value(Scalar, Emitter, Options) when is_atom(Scalar) ->
+  process_value(atom_to_binary(Scalar), Emitter, Options);
 process_value(Scalar, _Emitter, _Options) ->
   throw({error, {unserializable_value, Scalar}}).
 
