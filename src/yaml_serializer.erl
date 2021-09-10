@@ -78,7 +78,7 @@ process_value(Scalar, Emitter, _Options) when is_binary(Scalar) ->
   end;
 process_value(Scalar, Emitter, _Options) when is_atom(Scalar) ->
   emit_scalar(Emitter, atom_to_binary(Scalar), double_quoted);
-process_value(Scalar, Emitter, _Options) ->
+process_value(Scalar, _Emitter, _Options) ->
   throw({error, {unserializable_value, Scalar}}).
 
 -spec emit(yaml_nif:emitter(), yaml_events:event_type()) -> yaml_nif:emitter().
