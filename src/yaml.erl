@@ -17,6 +17,7 @@
 -export([libyaml_version/0, libyaml_version_string/0,
          is_version_supported/1,
          parse/1, parse/2,
+         serialize/1, serialize/2,
          failsafe_schema/0, core_schema/0,
          error/1, error/2,
          format_error/1, format_error_reason/1]).
@@ -29,6 +30,7 @@
               tagged_value_decoding_result/0,
               plain_scalar_identifier/0,
               plain_scalar_identifier_result/0,
+              serialization_options/0,
               tag/0, position/0, error/0, error_reason/0]).
 
 -type version() :: {non_neg_integer(), non_neg_integer()}.
@@ -61,6 +63,9 @@
 -type plain_scalar_identifier_result() ::
         {tag, tag()} | {value, value()}.
 
+-type serialization_options() ::
+        #{return_binary => boolean()}.
+
 -type tag() :: binary().
 
 -type position() :: {Line :: pos_integer(),
@@ -80,7 +85,9 @@
       | {unknown_tag, tag()}
       | {invalid_value, term(), tag(), value()}
       | {invalid_json_value, term()}
-      | {invalid_json_key, term()}.
+      | {invalid_json_key, term()}
+      | serialization_error
+      | {unserializable_value, term()}.
 
 -spec libyaml_version() -> {integer(), integer(), integer()}.
 libyaml_version() ->
@@ -104,6 +111,16 @@ parse(Data) ->
         {ok, [document()]} | {error, error_reason()}.
 parse(Data, Options) ->
   yaml_parser:parse(Data, Options).
+
+-spec serialize([document()]) ->
+        {ok, binary()} | {error, error_reason()}.
+serialize(Documents) ->
+  serialize(Documents, #{}).
+
+-spec serialize([document()], serialization_options()) ->
+        {ok, binary()} | {error, error_reason()}.
+serialize(Documents, Options) ->
+  yaml_serializer:serialize(Documents, Options).
 
 -spec failsafe_schema() -> schema().
 failsafe_schema() ->
@@ -143,8 +160,14 @@ format_error_reason({unknown_value, Reason, Tag, Value}) ->
   io_lib:format("invalid value ~ts for tag ~ts: ~0tp",
                 [Value, Tag, Reason]);
 format_error_reason({invalid_json_value, Value}) ->
-  io_lib:format("~0tp is not a valid json value", [Value]);
+  io_lib:format("invalid json value ~0tp", [Value]);
 format_error_reason({invalid_json_key, Value}) ->
-  io_lib:format("~0tp is not a valid json object key", [Value]);
+  io_lib:format("invalid json object key ~0tp", [Value]);
+format_error_reason(serialization_error) ->
+  %% Not much we can do about it, libyaml does not provide detailed error
+  %% diagnostics.
+  "serialization failure";
+format_error_reason({unserializable_value, Value}) ->
+  io_lib:format("unserializable value ~0tp", [Value]);
 format_error_reason(Reason) ->
   io_lib:format("~0tp", [Reason]).

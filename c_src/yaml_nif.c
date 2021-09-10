@@ -19,6 +19,10 @@ static ErlNifFunc eyaml_nif_functions[] = {
         {"get_version_string", 0, eyaml_get_version_string, 0},
 
         {"parse", 1, eyaml_parse, 0},
+
+        {"new_emitter", 0, eyaml_new_emitter, 0},
+        {"emitter_data", 1, eyaml_emitter_data, 0},
+        {"emit", 3, eyaml_emit, 0},
 };
 
 static int
@@ -40,6 +44,7 @@ eyaml_load(ErlNifEnv *env, void **priv, ERL_NIF_TERM info) {
         data->atom_document_end = enif_make_atom(env, "document_end");
         data->atom_document_start = enif_make_atom(env, "document_start");
         data->atom_double_quoted = enif_make_atom(env, "double_quoted");
+        data->atom_encoding = enif_make_atom(env, "encoding");
         data->atom_end = enif_make_atom(env, "end");
         data->atom_flow = enif_make_atom(env, "flow");
         data->atom_folded = enif_make_atom(env, "folded");
@@ -66,6 +71,8 @@ eyaml_load(ErlNifEnv *env, void **priv, ERL_NIF_TERM info) {
 
         data->parser_resource_type =
                 eyaml_create_resource_type(env, "parser", eyaml_parser_delete);
+        data->emitter_resource_type =
+                eyaml_create_resource_type(env, "emitter", eyaml_emitter_delete);
 
         *priv = (void *)data;
         return 0;

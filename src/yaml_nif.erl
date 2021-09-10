@@ -14,9 +14,14 @@
 
 -module(yaml_nif).
 
--export([get_version/0, get_version_string/0, parse/1]).
+-export([get_version/0, get_version_string/0, parse/1,
+         new_emitter/0, emitter_data/1, emit/3]).
+
+-export_type([emitter/0]).
 
 -on_load(init/0).
+
+-type emitter() :: reference().
 
 init() ->
   Path = filename:join(find_nif_directory(yaml), "yaml_nif"),
@@ -71,4 +76,18 @@ get_version_string() ->
 -spec parse(binary()) ->
         {ok, [yaml_events:event()]} | {error, yaml:error_reason()}.
 parse(_Data) ->
+  erlang:nif_error(nif_not_loaded).
+
+-spec new_emitter() -> emitter().
+new_emitter() ->
+  erlang:nif_error(nif_not_loaded).
+
+-spec emitter_data(emitter()) -> binary().
+emitter_data(_Emitter) ->
+  erlang:nif_error(nif_not_loaded).
+
+-spec emit(emitter(), yaml_events:event_type(),
+           yaml_events:event_data() | undefined) ->
+        {ok, emitter()} | {error, yaml:error_reason()}.
+emit(_Emitter, _Type, _Data) ->
   erlang:nif_error(nif_not_loaded).

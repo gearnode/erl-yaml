@@ -10,6 +10,8 @@ and
 [`enif_consume_timeslice`](https://erlang.org/doc/man/erl_nif.html#enif_consume_timeslice)
 to avoid blocking the scheduler during parsing.
 
+Serialization uses the libyaml emitter API. It is currently not configurable.
+
 # Documentation
 A handbook is available [in the `doc`
 directory](https://github.com/exograd/erl-yaml/blob/master/doc/handbook.md).

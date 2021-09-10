@@ -64,6 +64,32 @@ eyaml_map_put(ErlNifEnv *env, ERL_NIF_TERM key_term, ERL_NIF_TERM value_term,
         *map_term = map_term_2;
 }
 
+bool
+eyaml_is_atom(ErlNifEnv *env, ERL_NIF_TERM term, const char *name) {
+        char atom_name[256]; // totally arbitrary max length
+        int ret;
+
+        ret = enif_get_atom(env, term, atom_name, sizeof(atom_name),
+                            ERL_NIF_LATIN1);
+        if (ret == -1)
+                return false;
+
+        return strcmp(atom_name, name) == 0;
+}
+
+int
+eyaml_inspect_bool_int(ErlNifEnv *env, ERL_NIF_TERM term, int *value) {
+        if (eyaml_is_atom(env, term, "true")) {
+                *value = 1;
+        } else if (eyaml_is_atom(env, term, "false")) {
+                *value = 0;
+        } else {
+                return 0;
+        }
+
+        return 1;
+}
+
 ErlNifResourceType *
 eyaml_create_resource_type(ErlNifEnv *env, const char *name,
                            ErlNifResourceDtor *dtor) {

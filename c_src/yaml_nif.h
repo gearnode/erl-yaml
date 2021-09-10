@@ -24,6 +24,7 @@
 
 struct eyaml_nif_data {
         ErlNifResourceType *parser_resource_type;
+        ErlNifResourceType *emitter_resource_type;
 
         ERL_NIF_TERM atom_alias;
         ERL_NIF_TERM atom_anchor;
@@ -33,6 +34,7 @@ struct eyaml_nif_data {
         ERL_NIF_TERM atom_document_end;
         ERL_NIF_TERM atom_document_start;
         ERL_NIF_TERM atom_double_quoted;
+        ERL_NIF_TERM atom_encoding;
         ERL_NIF_TERM atom_end;
         ERL_NIF_TERM atom_flow;
         ERL_NIF_TERM atom_folded;
@@ -68,7 +70,12 @@ YAML_EXPORT(eyaml_get_version_string);
 
 YAML_EXPORT(eyaml_parse);
 
+YAML_EXPORT(eyaml_new_emitter);
+YAML_EXPORT(eyaml_emitter_data);
+YAML_EXPORT(eyaml_emit);
+
 void eyaml_parser_delete(ErlNifEnv *, void *);
+void eyaml_emitter_delete(ErlNifEnv *, void *);
 
 ERL_NIF_TERM eyaml_ok_tuple(ErlNifEnv *, ERL_NIF_TERM);
 ERL_NIF_TERM eyaml_error_tuple(ErlNifEnv *, ERL_NIF_TERM);
@@ -76,8 +83,9 @@ ERL_NIF_TERM eyaml_binary_string(ErlNifEnv *, const char *);
 ERL_NIF_TERM eyaml_binary_ustring(ErlNifEnv *, const unsigned char *);
 ERL_NIF_TERM eyaml_boolean(ErlNifEnv *, bool);
 void eyaml_reverse_list(ErlNifEnv *, ERL_NIF_TERM *);
-void eyaml_map_put(ErlNifEnv *env, ERL_NIF_TERM, ERL_NIF_TERM, ERL_NIF_TERM *);
-
+void eyaml_map_put(ErlNifEnv *, ERL_NIF_TERM, ERL_NIF_TERM, ERL_NIF_TERM *);
+bool eyaml_is_atom(ErlNifEnv *, ERL_NIF_TERM, const char *);
+int eyaml_inspect_bool_int(ErlNifEnv *, ERL_NIF_TERM, int *);
 ErlNifResourceType *eyaml_create_resource_type(ErlNifEnv *, const char *,
                                                ErlNifResourceDtor *);
 
