@@ -16,7 +16,7 @@
 
 -export([parse/1]).
 
--export_type([event_type/0, event/0, event/1,
+-export_type([event_type/0, event_data/0, event/0, event/1,
               stream_start/0, document_start/0, document_end/0, alias/0,
               scalar/0, sequence_start/0, mapping_start/0,
               encoding/0, version_directive/0, tag_directive/0,
@@ -35,13 +35,22 @@
       | mapping_end
       | {unknown, non_neg_integer()}.
 
+-type event_data() ::
+        stream_start()
+      | document_start()
+      | document_end()
+      | alias()
+      | scalar()
+      | sequence_start()
+      | mapping_start().
+
 -type event(Data) ::
         #{type := event_type(),
           data => Data,
           start := yaml:position(),
           'end' := yaml:position()}.
 
--type event() :: event(any()).
+-type event() :: event(event_data()).
 
 -type stream_start() ::
         #{encoding => encoding()}.
