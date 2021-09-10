@@ -17,17 +17,21 @@ NIF_OBJ = $(subst .c,.o,$(NIF_SRC))
 
 PLATFORM = $(shell uname -s)
 
+ifneq ($(_KERL_ACTIVE_DIR),)
+	CFLAGS += -I$(_KERL_ACTIVE_DIR)/usr/include
+	LDFLAGS += -L$(_KERL_ACTIVE_DIR)/usr/lib
+endif
+
 ifeq ($(PLATFORM), Linux)
 	CFLAGS += -I/usr/lib/erlang/usr/include
-
 	LDFLAGS += -L/usr/lib/erlang/usr/lib
 endif
 
 ifeq ($(PLATFORM), FreeBSD)
 	CFLAGS += -I/usr/local/include
-	CFLAGS += -I/usr/local/lib/erlang/usr/include
-
 	LDFLAGS += -L/usr/local/lib
+
+	CFLAGS += -I/usr/local/lib/erlang/usr/include
 	LDFLAGS += -L/usr/local/lib/erlang/usr/lib
 endif
 
