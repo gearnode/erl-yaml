@@ -93,12 +93,9 @@ eyaml_parser_delete(ErlNifEnv *env, void *ptr) {
 
 ERL_NIF_TERM
 eyaml_parse(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-        struct eyaml_nif_data *nif_data;
         struct eyaml_parser *parser;
         ErlNifBinary data;
         ERL_NIF_TERM argv2[2];
-
-        nif_data = enif_priv_data(env);
 
         if (argc != 1) {
                 return enif_make_badarg(env);
@@ -181,8 +178,8 @@ eyaml_parse_1(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
                 if (parser->block_size > parser->max_block_size) {
                         int percent;
 
-                        percent = parser->block_size * 100;
-                        percent /= parser->max_block_size;
+                        percent = (int)parser->block_size * 100;
+                        percent /= (int)parser->max_block_size;
 
                         if (percent > 100) percent = 100;
                         if (percent == 0) percent = 1;
