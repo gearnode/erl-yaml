@@ -1,4 +1,4 @@
-CC = clang
+CC = gcc
 
 CFLAGS += -std=c99
 CFLAGS += -D_POSIX_C_SOURCE=200809L
