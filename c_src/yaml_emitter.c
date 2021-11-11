@@ -130,10 +130,7 @@ eyaml_new_emitter(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
 
 ERL_NIF_TERM
 eyaml_emitter_data(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-        struct eyaml_nif_data *nif_data;
         struct eyaml_emitter *emitter;
-
-        nif_data = enif_priv_data(env);
 
         if (argc != 1)
                 return enif_make_badarg(env);
@@ -149,13 +146,10 @@ eyaml_emitter_data(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
 
 ERL_NIF_TERM
 eyaml_emit(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-        struct eyaml_nif_data *nif_data;
         struct eyaml_emitter *emitter;
         ERL_NIF_TERM emitter_term;
         yaml_event_t event;
         int ret;
-
-        nif_data = enif_priv_data(env);
 
         if (argc != 3)
                 return enif_make_badarg(env);
