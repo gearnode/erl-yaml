@@ -1,10 +1,14 @@
-CC = gcc
+CC ?= clang
 
 CFLAGS += -std=c99
 CFLAGS += -D_POSIX_C_SOURCE=200809L
 CFLAGS += -Wall -Wextra -Werror -Wsign-conversion
 CFLAGS += -Wno-unused-parameter -Wno-unused-function
+
+ifeq ($(CC), clang)
 CFLAGS += -fcolor-diagnostics
+endif
+
 CFLAGS += -fPIC
 
 LDFLAGS += -shared
